@@ -52,7 +52,7 @@ class Star:
         root = tkinter.Tk()
         myCanvas = tkinter.Canvas(root, bg="white", height=200, width=200)
 
-        polygon = myCanvas.create_polygon()
+        polygon = myCanvas.create_polygon(self.outline_coordinates, )
 
         # add to window and show
         myCanvas.pack()

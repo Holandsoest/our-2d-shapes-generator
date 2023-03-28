@@ -204,7 +204,6 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
     root = tkinter.Tk()
     canvas_background_color = 'white' # BUG thinker and PIL background not the same
     canvas = tkinter.Canvas(root, bg=canvas_background_color, height=img_size.y, width=img_size.x)
-    print(f'bg={canvas_background_color}')
     annotation_info = []
 
     # Generate shapes
@@ -221,12 +220,14 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             shape_color = get_random_tkinter_color_(avoid_color=canvas_background_color)
 
             # Choose shape
-            match random.randint(0,0):
+            match random.randint(0,1):
                 case 0: 
-                    shape = Star(center_pos=shape_pos,
-                                size_in_pixels=shape_size,
-                                rotation_rad=random.random() * math.pi * 2 / 5,
-                                depth_percentage=random.randint(20,70))
+                    shape = Star(center_pos=shape_pos, size_in_pixels=shape_size,
+                                 rotation_rad=random.random() * math.pi * 2 / 5,
+                                 depth_percentage=random.randint(20,70))
+                case 1:
+                    shape = Square(center_pos=shape_pos, size_in_pixels=shape_size,
+                                   rotation_rad=random.random() * math.pi / 2,)
                 case _:
                     raise Warning('Out of range; in the count of shapes.')
 

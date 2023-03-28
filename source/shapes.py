@@ -91,6 +91,11 @@ def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_
     tkinter_canvas.update()
 
 
+    # Create that directory if it does not exists yet
+    parent_path = os.path.split(path_filename)[0] # 1 directory up
+    if not os.path.exists(parent_path): os.makedirs(parent_path)
+
+
     from PIL import Image, ImageTk, EpsImagePlugin
     if as_eps:
         canvas.postscript(file = path_filename + '.eps')
@@ -119,7 +124,13 @@ def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_
     if as_bmp: img.save(path_filename + '.bmp', 'bmp')
     if as_jpg: img.save(path_filename + '.jpg', 'JPEG')
 def save_annotation(list_of_annotations:list, path_filename:str) -> None:
-    with open(path_filename + '.txt', "a") as file:
+
+    # Create that directory if it does not exists yet
+    parent_path = os.path.split(path_filename)[0] # 1 directory up
+    if not os.path.exists(parent_path): os.makedirs(parent_path)
+
+    # Write to the file
+    with open(path_filename + '.txt', "w") as file:
         for line in list_of_annotations:
             file.write(f'{line}\n')
         file.flush()
@@ -141,9 +152,6 @@ annotation_info.append(shape.get_annotation(img_size=img_size))
 canvas.create_polygon(shape.get_polygon_coordinates(),
                                         outline="blue", width=1,
                                         fill="gray")
-# canvas.create_polygon(star2.get_polygon_coordinates(),
-#                                         outline="blue", width=1,
-#                                         fill="gray")
 
 image_code = 1
 save_img(tkinter_canvas=canvas,

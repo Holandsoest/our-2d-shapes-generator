@@ -87,10 +87,10 @@ def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_
     EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs10.01.1\bin\gswin64c' # This is the default location, Telling PIL that it should be here
 
 
-    if as_jpg: img.save(path_filename + '.jpg', 'jpg')
     if as_png: img.save(path_filename + '.png', 'png')
     if as_gif: img.save(path_filename + '.gif', 'gif')
     if as_bmp: img.save(path_filename + '.bmp', 'bmp')
+    if as_jpg: img.save(path_filename + '.jpg', 'JPEG')
 
 
 img_size = loc.Pos(x=200, y=200)

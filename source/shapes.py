@@ -6,6 +6,10 @@ import os
 
 object_names_array=["circle, half circle, square, heart, star, triangle"]
 class Annotation:
+    """An annotation is what machine learning uses to determine what something is.
+    the syntax of our annotation goes as follows `class_id x y width height`  
+    the class_id points to what shape it is.
+    the rest is a float between 0 - 1"""
     def __init__(self, class_id:int, center_pos:loc.Pos, image_size:loc.Pos, coordinates:list) -> None:
         """## Constructor
         `class_id` a int between  0 - n, wherein n is the amount of machine learning objects there are. See `object_names_array` in the machine learning training model for more info.
@@ -37,6 +41,7 @@ class Annotation:
         dy = max_y - min_y
         self.height = float(dy)/float(img_size.y)
     def __str__(self) -> str:
+        """`class_id x y width height`"""
         return f'{self.class_id} {self.x} {self.y} {self.width} {self.height}'
     def collides(self, other) -> bool:
         """returns bool, true whenever the other collides."""
@@ -166,14 +171,16 @@ def get_random_tkinter_color_() -> str:
 def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str) -> None:
     # Setup environment
     root = tkinter.Tk()
-    canvas_background_color = get_random_tkinter_color_()
+    canvas_background_color = 'white' # BUG thinker and PIL background not the same
     canvas = tkinter.Canvas(root, bg=canvas_background_color, height=img_size.y, width=img_size.x)
+    print(f'bg={canvas_background_color}')
     annotation_info = []
 
     # Generate shapes
-    for i in range(1, objects):
+    for i in range(0, objects):
         collision_with_previous_shape = True
-        while (collision_with_previous_shape):
+        collision_attempts = 0
+        while (collision_with_previous_shape and not (collision_attempts > 100 and i > 0)):
 
             # Get parameters
             shape_size = int(random.randint(50, int(img_size.min() / 2)))
@@ -195,6 +202,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
 
             # In case this collides with another existing shape then skip it
             collision_with_previous_shape = False
+            collision_attempts += 1
             for existing_annotation in annotation_info:
                 if shape.annotation.collides(existing_annotation):
                     collision_with_previous_shape = True
@@ -204,6 +212,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
                     collision_with_previous_shape = True
                     print(f'Debug: Collision: Color.\timage_code={image_code}\tshape=({i}/{objects})')
                     break
+        if collision_attempts > 100: continue
         
         # In case it does not collide then add the annotation to the list and draw it on the canvas
         annotation_info.append(shape.annotation)
@@ -224,8 +233,9 @@ if __name__ == '__main__':
     path = os.path.join(os.getcwd(), 'files', 'shape_generator')
 
     image_code_start = 1
-    size_batch = 1000
-    max_objects = 5
+    size_batch = 200
+    max_objects = 7
+
     
     for image_code in range(image_code_start, image_code_start + size_batch):
         create_random_image(image_code=image_code,

@@ -4,7 +4,7 @@ import random
 import math
 import os
 
-object_names_array=["circle, half circle, square, heart, star, triangle"]
+object_names_array=["circle", "half circle", "square", "heart", "star", "triangle"]
 class Annotation:
     """An annotation is what machine learning uses to determine what something is.
     the syntax of our annotation goes as follows `class_id x y width height`  
@@ -57,23 +57,27 @@ class Annotation:
         if self_lower_pos.y > other_upper_pos.y: return False # Under other
         return True
 
-def shoot_(start_pos:loc.Pos, length_trace=1, rotation_rad=0.0) -> loc.Pos:
+def calculate_arm_point_(start_pos:loc.Pos, length_trace=1, rotation_rad=0.0) -> loc.Pos:
+    """uses the idea of the unit circle to calculate the position from a start position, rotation and length of the arm"""
     return loc.Pos(
         x= start_pos.x + length_trace * math.cos(rotation_rad),
         y= start_pos.y + length_trace * (-math.sin(rotation_rad)) )
-def firework_outwards_(center_pos:loc.Pos, traces= 4, length_traces=10, rotation_rad=0):
+def calculate_shape_arms_(center_pos:loc.Pos, traces= 4, length_traces=10, rotation_rad=0) -> list:
+    """Calculates multiple arms out of one point that give a outline"""
     output = []
 
     trace_rad_spacing = math.pi * 2 / float(traces)
 
     for i in range(traces):
-        output.append(shoot_(
+        output.append(calculate_arm_point_(
             start_pos=      center_pos,
             length_trace=   length_traces,
             rotation_rad=   rotation_rad + i * trace_rad_spacing
         ))
 
     return output
+
+# Shapes
 class Star:
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0, depth_percentage=50):
         self.center_pos = center_pos
@@ -84,8 +88,8 @@ class Star:
         # store the outline in a list
         self.outline_coordinates = []
 
-        outer_points = firework_outwards_(center_pos=center_pos, traces=5, length_traces=size_in_pixels / 2, rotation_rad=rotation_rad)
-        inner_points = firework_outwards_(center_pos=center_pos, traces=5, length_traces=size_in_pixels / 200 * depth_percentage,
+        outer_points = calculate_shape_arms_(center_pos=center_pos, traces=5, length_traces=size_in_pixels / 2, rotation_rad=rotation_rad)
+        inner_points = calculate_shape_arms_(center_pos=center_pos, traces=5, length_traces=size_in_pixels / 200 * depth_percentage,
                                          rotation_rad=rotation_rad + (math.pi / float(5)))
 
         self.outline_coordinates.append(outer_points[0])
@@ -107,10 +111,34 @@ class Star:
             polygon_coordinates.append(  int(round(  node.x,  0  ))  )
             polygon_coordinates.append(  int(round(  node.y,  0  ))  )
         return polygon_coordinates
+class Square:
+    def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0):
+        self.center_pos = center_pos
+        self.size_in_pixels = size_in_pixels
+        self.rotation_rad=rotation_rad
+
+        # store the outline in a list
+        self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=4, length_traces=size_in_pixels / 2, rotation_rad=rotation_rad)
+
+        self.annotation=Annotation(2, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+    def get_polygon_coordinates(self):
+        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
+        polygon_coordinates = []
+        for node in self.outline_coordinates:
+            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
+            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
+        return polygon_coordinates
+
 
 def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_jpg=False, as_gif=False, as_bmp=False, as_eps=False) -> None:
+    """Saves the `tkinter.Canvas` object as a image, on the location of `path_filename` as the chosen formats.
+    
+    ### WARNING this requires Ghostscript, please install https://ghostscript.com/releases/gsdnld.html, and restart your PC 
+    - `tkinter_canvas` The canvas that has to be saved as an image.
+    - `path_filename` The (absolute) path that point to the image file without the extension. Example:`r'C:\Program Files\my_project\my_folder_with_images\image_1'`
+    - `as_###` The bool that can be true to export that file format. This allows multiple at once. At least one is required."""
     if not ( as_png or as_jpg or as_gif or as_bmp or as_eps ):
-        print('WARNING: Could not save as no file format was given.')
+        print('WARNING: Could not save, as no file format was given.')
         return
     
 
@@ -142,7 +170,7 @@ def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_
     # My guide:
     # 1. CRY
     # 2. https://ghostscript.com/releases/gsdnld.html Just brrrr install this as x64
-    # 3. This took me hours :'(
+    # 3. This took me 5.5 hours :'(
     EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs10.01.1\bin\gswin64c' # This is the default location, Telling PIL that it should be here
 
 
@@ -163,9 +191,12 @@ def save_annotation(list_of_annotations:list, path_filename:str) -> None:
         file.flush()
         file.close()
 
-def get_random_tkinter_color_() -> str:
-    import random
+def get_random_tkinter_color_(avoid_color) -> str:
     colors = ["white", "black", "red", "green", "blue", "cyan", "yellow", "magenta"]
+    if type(avoid_color) == type(str):
+        try:    colors.remove(str.lower(avoid_color))
+        except: print(f'Told me to avoid color={avoid_color} in `get_random_tkinter_color_`, but that color does not exists')
+    elif type(avoid_color) == type(int): colors.remove(colors[avoid_color])
     return colors[ random.randint(0,  len(colors) - 1  ) ]
 
 def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str) -> None:
@@ -187,7 +218,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             shape_pos = loc.Pos(x=random.randint(int(shape_size/2), img_size.x - int(shape_size/2)),
                                 y=random.randint(int(shape_size/2), img_size.y - int(shape_size/2)),
                                 force_int=True)
-            shape_color = get_random_tkinter_color_()
+            shape_color = get_random_tkinter_color_(avoid_color=canvas_background_color)
 
             # Choose shape
             match random.randint(0,0):
@@ -207,10 +238,6 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
                 if shape.annotation.collides(existing_annotation):
                     collision_with_previous_shape = True
                     print(f'Debug: Collision: Position.\timage_code={image_code}\tshape=({i}/{objects})')
-                    break
-                if shape_color == canvas_background_color:
-                    collision_with_previous_shape = True
-                    print(f'Debug: Collision: Color.\timage_code={image_code}\tshape=({i}/{objects})')
                     break
         if collision_attempts > 100: continue
         

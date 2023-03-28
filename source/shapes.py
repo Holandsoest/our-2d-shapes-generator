@@ -1,9 +1,56 @@
 import common.location as loc
 import tkinter
+import random
 import math
 import os
 
 object_names_array=["circle, half circle, square, heart, star, triangle"]
+class Annotation:
+    def __init__(self, class_id:int, center_pos:loc.Pos, image_size:loc.Pos, coordinates:list) -> None:
+        """## Constructor
+        `class_id` a int between  0 - n, wherein n is the amount of machine learning objects there are. See `object_names_array` in the machine learning training model for more info.
+        
+        `center_pos` the x and y coordinates of the center of the object
+        
+        `image_size` the x=width and y=hight of the image in pixels
+        
+        `coordinates` a list of positions with x and y values"""
+        assert class_id >= 0
+        
+        self.class_id=str(class_id)
+        self.x=float(center_pos.x)/float(image_size.x)
+        self.y=float(center_pos.y)/float(image_size.y)
+
+        min_x = coordinates[0].x
+        max_x = coordinates[0].x
+        for pos in coordinates:
+            min_x = min(min_x, pos.x)
+            max_x = max(max_x, pos.x)
+        dx = max_x - min_x
+        self.width = float(dx)/float(img_size.x)
+
+        min_y = coordinates[0].y
+        max_y = coordinates[0].y
+        for pos in coordinates:
+            min_y = min(min_y, pos.y)
+            max_y = max(max_y, pos.y)
+        dy = max_y - min_y
+        self.height = float(dy)/float(img_size.y)
+    def __str__(self) -> str:
+        return f'{self.class_id} {self.x} {self.y} {self.width} {self.height}'
+    def collides(self, other) -> bool:
+        """returns bool, true whenever the other collides."""
+
+        self_lower_pos = loc.Pos(x=self.x-self.width/2, y=self.y-self.height/2)
+        self_upper_pos = loc.Pos(x=self.x+self.width/2, y=self.y+self.height/2)
+        other_lower_pos = loc.Pos(x=other.x-other.width/2, y=other.y-other.height/2)
+        other_upper_pos = loc.Pos(x=other.x+other.width/2, y=other.y+other.height/2)
+        
+        if self_upper_pos.x < other_lower_pos.x: return False # Left of other
+        if self_upper_pos.y < other_lower_pos.y: return False # Above other
+        if self_lower_pos.x > other_upper_pos.x: return False # Right of other
+        if self_lower_pos.y > other_upper_pos.y: return False # Under other
+        return True
 
 def shoot_(start_pos:loc.Pos, length_trace=1, rotation_rad=0.0) -> loc.Pos:
     return loc.Pos(
@@ -46,33 +93,8 @@ class Star:
         self.outline_coordinates.append(inner_points[3])
         self.outline_coordinates.append(outer_points[4])
         self.outline_coordinates.append(inner_points[4])
-    def get_outline_coordinates(self):
-        return self.outline_coordinates
-    def get_annotation(self, img_size:loc.Pos) -> str:
-        class_id = '4'
 
-        x = float(self.center_pos.x)/float(img_size.x)
-
-        y = float(self.center_pos.y)/float(img_size.y)
-
-        min_x = self.outline_coordinates[0].x
-        max_x = self.outline_coordinates[0].x
-        for pos in self.outline_coordinates:
-            min_x = min(min_x, pos.x)
-            max_x = max(max_x, pos.x)
-        dx = max_x - min_x
-        width = float(dx)/float(img_size.x)
-
-        min_y = self.outline_coordinates[0].y
-        max_y = self.outline_coordinates[0].y
-        for pos in self.outline_coordinates:
-            min_y = min(min_y, pos.y)
-            max_y = max(max_y, pos.y)
-        dy = max_y - min_y
-        height = float(dy)/float(img_size.y)
-
-        return f'{class_id} {x} {y} {width} {height}'
-
+        self.annotation=Annotation(4, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -140,40 +162,51 @@ def get_random_tkinter_color_() -> str:
     import random
     colors = ["white", "black", "red", "green", "blue", "cyan", "yellow", "magenta"]
     return colors[ random.randint(0,  len(colors) - 1  ) ]
-def create_random_image(image_code:int, max_objects:int, img_size:loc.Pos, path:str) -> None:
-    import random
 
+def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str) -> None:
     # Setup environment
     root = tkinter.Tk()
-    canvas = tkinter.Canvas(root, bg="white", height=img_size.y, width=img_size.x)
+    canvas_background_color = get_random_tkinter_color_()
+    canvas = tkinter.Canvas(root, bg=canvas_background_color, height=img_size.y, width=img_size.x)
     annotation_info = []
 
-    # Variables
-    shapes = random.randint(1,max_objects)
-
     # Generate shapes
-    for i in range(1, shapes):
+    for i in range(1, objects):
+        collision_with_previous_shape = True
+        while (collision_with_previous_shape):
 
-        # Get parameters
-        shape_size = int(random.randint(10, int(img_size.min() / 1.5)))
-        shape_pos = loc.Pos(x=random.randint(int(shape_size/2), img_size.x - int(shape_size/2)),
-                            y=random.randint(int(shape_size/2), img_size.y - int(shape_size/2)),
-                            force_int=True)
-        shape_color = get_random_tkinter_color_()
+            # Get parameters
+            shape_size = int(random.randint(50, int(img_size.min() / 2)))
+            shape_pos = loc.Pos(x=random.randint(int(shape_size/2), img_size.x - int(shape_size/2)),
+                                y=random.randint(int(shape_size/2), img_size.y - int(shape_size/2)),
+                                force_int=True)
+            shape_color = get_random_tkinter_color_()
 
-        # Choose shape
-        match random.randint(0,0):
-            case 0: 
-                shape = Star(center_pos=shape_pos,
-                             size_in_pixels=shape_size,
-                             rotation_rad=random.random() * math.pi * 2 / 5,
-                             depth_percentage=random.randint(20,70))
-            case _:
-                raise Warning('Out of range; in the count of shapes.')
+            # Choose shape
+            match random.randint(0,0):
+                case 0: 
+                    shape = Star(center_pos=shape_pos,
+                                size_in_pixels=shape_size,
+                                rotation_rad=random.random() * math.pi * 2 / 5,
+                                depth_percentage=random.randint(20,70))
+                case _:
+                    raise Warning('Out of range; in the count of shapes.')
 
-        #TODO check for overlap -> return BAD
 
-        annotation_info.append(shape.get_annotation(img_size=img_size))
+            # In case this collides with another existing shape then skip it
+            collision_with_previous_shape = False
+            for existing_annotation in annotation_info:
+                if shape.annotation.collides(existing_annotation):
+                    collision_with_previous_shape = True
+                    print(f'Debug: Collision: Position.\timage_code={image_code}\tshape=({i}/{objects})')
+                    break
+                if shape_color == canvas_background_color:
+                    collision_with_previous_shape = True
+                    print(f'Debug: Collision: Color.\timage_code={image_code}\tshape=({i}/{objects})')
+                    break
+        
+        # In case it does not collide then add the annotation to the list and draw it on the canvas
+        annotation_info.append(shape.annotation)
         canvas.create_polygon(shape.get_polygon_coordinates(),
                               outline=shape_color, width=1,
                               fill=shape_color)
@@ -184,20 +217,18 @@ def create_random_image(image_code:int, max_objects:int, img_size:loc.Pos, path:
             as_jpg=True)
     save_annotation(annotation_info,
                     path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
-def create_random_batch(size_batch:int, img_size:loc.Pos, image_code_start=1, batch_nr=0) -> None:
-    if batch_nr == 0:
-        path = os.path.join(os.getcwd(), 'files', 'shape_generator')
-    else:
-        path = os.path.join(os.getcwd(), 'files', 'shape_generator', f'batch {batch_nr}')
-    
-    for image_code in range(image_code_start, image_code_start + size_batch):
-        create_random_image(image_code=image_code,
-                            max_objects=5,                                      ###########
-                            img_size=img_size,
-                            path=path)
-
 
 if __name__ == '__main__':
 
     img_size = loc.Pos(x=200, y=200)
-    create_random_batch(size_batch=10, img_size=img_size)
+    path = os.path.join(os.getcwd(), 'files', 'shape_generator')
+
+    image_code_start = 1
+    size_batch = 1000
+    max_objects = 5
+    
+    for image_code in range(image_code_start, image_code_start + size_batch):
+        create_random_image(image_code=image_code,
+                            objects=random.randint(1, max_objects),
+                            img_size=img_size,
+                            path=path)

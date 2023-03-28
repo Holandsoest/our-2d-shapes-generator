@@ -137,7 +137,9 @@ def save_annotation(list_of_annotations:list, path_filename:str) -> None:
         file.close()
 
 def get_random_tkinter_color_() -> str:
-    return 'blue' # TODO
+    import random
+    colors = ["white", "black", "red", "green", "blue", "cyan", "yellow", "magenta"]
+    return colors[ random.randint(0,  len(colors) - 1  ) ]
 def create_random_image(image_code:int, max_objects:int, img_size:loc.Pos, path:str) -> None:
     import random
 

@@ -98,11 +98,11 @@ def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_
 
     from PIL import Image, ImageTk, EpsImagePlugin
     if as_eps:
-        canvas.postscript(file = path_filename + '.eps')
+        tkinter_canvas.postscript(file = path_filename + '.eps')
         img = Image.open(path_filename + '.eps')
     else:
         import io
-        postscript = canvas.postscript(colormode='color')
+        postscript = tkinter_canvas.postscript(colormode='color')
         img = Image.open(io.BytesIO(postscript.encode('utf-8')))
 
 
@@ -136,26 +136,66 @@ def save_annotation(list_of_annotations:list, path_filename:str) -> None:
         file.flush()
         file.close()
 
-img_size = loc.Pos(x=200, y=200)
-path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'batch')
+def get_random_tkinter_color_() -> str:
+    return 'blue' # TODO
+def create_random_image(image_code:int, max_objects:int, img_size:loc.Pos, path:str) -> None:
+    import random
 
-root = tkinter.Tk()
-canvas = tkinter.Canvas(root, bg="white", height=img_size.y, width=img_size.x)
+    # Setup environment
+    root = tkinter.Tk()
+    canvas = tkinter.Canvas(root, bg="white", height=img_size.y, width=img_size.x)
+    annotation_info = []
 
-annotation_info = []
+    # Variables
+    shapes = random.randint(1,max_objects)
 
-shape = Star(center_pos=loc.Pos(x=50, y=50),
-             size_in_pixels=24,
-             rotation_rad=0.0,
-             depth_percentage=50)
-annotation_info.append(shape.get_annotation(img_size=img_size))
-canvas.create_polygon(shape.get_polygon_coordinates(),
-                                        outline="blue", width=1,
-                                        fill="gray")
+    # Generate shapes
+    for i in range(1, shapes):
 
-image_code = 1
-save_img(tkinter_canvas=canvas,
-         path_filename=os.path.join(path, 'images', f'img ({image_code})'),
-         as_jpg=True)
-save_annotation(annotation_info,
-                path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
+        # Get parameters
+        shape_size = int(random.randint(10, int(img_size.min() / 1.5)))
+        shape_pos = loc.Pos(x=random.randint(int(shape_size/2), img_size.x - int(shape_size/2)),
+                            y=random.randint(int(shape_size/2), img_size.y - int(shape_size/2)),
+                            force_int=True)
+        shape_color = get_random_tkinter_color_()
+
+        # Choose shape
+        match random.randint(0,0):
+            case 0: 
+                shape = Star(center_pos=shape_pos,
+                             size_in_pixels=shape_size,
+                             rotation_rad=random.random() * math.pi * 2 / 5,
+                             depth_percentage=random.randint(20,70))
+            case _:
+                raise Warning('Out of range; in the count of shapes.')
+
+        #TODO check for overlap -> return BAD
+
+        annotation_info.append(shape.get_annotation(img_size=img_size))
+        canvas.create_polygon(shape.get_polygon_coordinates(),
+                              outline=shape_color, width=1,
+                              fill=shape_color)
+    
+    # Summit the data
+    save_img(tkinter_canvas=canvas,
+            path_filename=os.path.join(path, 'images', f'img ({image_code})'),
+            as_jpg=True)
+    save_annotation(annotation_info,
+                    path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
+def create_random_batch(size_batch:int, img_size:loc.Pos, image_code_start=1, batch_nr=0) -> None:
+    if batch_nr == 0:
+        path = os.path.join(os.getcwd(), 'files', 'shape_generator')
+    else:
+        path = os.path.join(os.getcwd(), 'files', 'shape_generator', f'batch {batch_nr}')
+    
+    for image_code in range(image_code_start, image_code_start + size_batch):
+        create_random_image(image_code=image_code,
+                            max_objects=5,                                      ###########
+                            img_size=img_size,
+                            path=path)
+
+
+if __name__ == '__main__':
+
+    img_size = loc.Pos(x=200, y=200)
+    create_random_batch(size_batch=10, img_size=img_size)

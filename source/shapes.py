@@ -254,6 +254,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             as_jpg=True)
     save_annotation(annotation_info,
                     path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
+    root.destroy()
 
 if __name__ == '__main__':
 

@@ -34,6 +34,10 @@ class Pos:
         """returns x * y"""
         return self.x * self.y
     
+    # Parsing outwards
+    def get_as_list(self) -> list:
+        return [self.x, self.y]
+    
 def get_screensize() -> Pos:
     """Uses tkinter to grab the screensize of the primary screen, returns a Pos class with the x and y values as length=x and hight=y"""
     import tkinter

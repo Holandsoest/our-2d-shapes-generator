@@ -3,6 +3,8 @@ import tkinter
 import math
 import os
 
+object_names_array=["circle, half circle, square, heart, star, triangle"]
+
 def shoot_(start_pos:loc.Pos, length_trace=1, rotation_rad=0.0) -> loc.Pos:
     return loc.Pos(
         x= start_pos.x + length_trace * math.cos(rotation_rad),
@@ -46,6 +48,31 @@ class Star:
         self.outline_coordinates.append(inner_points[4])
     def get_outline_coordinates(self):
         return self.outline_coordinates
+    def get_annotation(self, img_size:loc.Pos) -> str:
+        class_id = '4'
+
+        x = float(self.center_pos.x)/float(img_size.x)
+
+        y = float(self.center_pos.y)/float(img_size.y)
+
+        min_x = self.outline_coordinates[0].x
+        max_x = self.outline_coordinates[0].x
+        for pos in self.outline_coordinates:
+            min_x = min(min_x, pos.x)
+            max_x = max(max_x, pos.x)
+        dx = max_x - min_x
+        width = float(dx)/float(img_size.x)
+
+        min_y = self.outline_coordinates[0].y
+        max_y = self.outline_coordinates[0].y
+        for pos in self.outline_coordinates:
+            min_y = min(min_y, pos.y)
+            max_y = max(max_y, pos.y)
+        dy = max_y - min_y
+        height = float(dy)/float(img_size.y)
+
+        return f'{class_id} {x} {y} {width} {height}'
+
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -91,32 +118,36 @@ def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_
     if as_gif: img.save(path_filename + '.gif', 'gif')
     if as_bmp: img.save(path_filename + '.bmp', 'bmp')
     if as_jpg: img.save(path_filename + '.jpg', 'JPEG')
-
+def save_annotation(list_of_annotations:list, path_filename:str) -> None:
+    with open(path_filename + '.txt', "a") as file:
+        for line in list_of_annotations:
+            file.write(f'{line}\n')
+        file.flush()
+        file.close()
 
 img_size = loc.Pos(x=200, y=200)
-path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'test_img')
+path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'batch')
 
 root = tkinter.Tk()
 canvas = tkinter.Canvas(root, bg="white", height=img_size.y, width=img_size.x)
 
+annotation_info = []
 
-star1 = Star(center_pos=loc.Pos(x=50, y=50),
+shape = Star(center_pos=loc.Pos(x=50, y=50),
              size_in_pixels=24,
              rotation_rad=0.0,
              depth_percentage=50)
-star2 = Star(center_pos=loc.Pos(x=150, y=100),
-             size_in_pixels=60,
-             rotation_rad=1.0,
-             depth_percentage=10)
-
-canvas.create_polygon(star1.get_polygon_coordinates(),
+annotation_info.append(shape.get_annotation(img_size=img_size))
+canvas.create_polygon(shape.get_polygon_coordinates(),
                                         outline="blue", width=1,
                                         fill="gray")
 # canvas.create_polygon(star2.get_polygon_coordinates(),
 #                                         outline="blue", width=1,
 #                                         fill="gray")
 
-
+image_code = 1
 save_img(tkinter_canvas=canvas,
-         path_filename=os.path.join(os.getcwd(), 'files', 'shape_generator'),
-         as_jpg=True, as_bmp=True, as_gif=True, as_png=True, as_eps=True)
+         path_filename=os.path.join(path, 'images', f'img ({image_code})'),
+         as_jpg=True)
+save_annotation(annotation_info,
+                path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))

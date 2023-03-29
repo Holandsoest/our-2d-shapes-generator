@@ -57,6 +57,7 @@ class Annotation:
         if self_lower_pos.y > other_upper_pos.y: return False # Under other
         return True
 
+# Functions to help draw shapes
 def calculate_arm_point_(start_pos:loc.Pos, length_trace=1, rotation_rad=0.0) -> loc.Pos:
     """uses the idea of the unit circle to calculate the position from a start position, rotation and length of the arm"""
     return loc.Pos(
@@ -129,7 +130,7 @@ class Square:
             polygon_coordinates.append(  int(round(  node.y,  0  ))  )
         return polygon_coordinates
 
-
+# Saving data to 
 def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_jpg=False, as_gif=False, as_bmp=False, as_eps=False) -> None:
     """Saves the `tkinter.Canvas` object as a image, on the location of `path_filename` as the chosen formats.
     
@@ -192,11 +193,11 @@ def save_annotation(list_of_annotations:list, path_filename:str) -> None:
         file.close()
 
 def get_random_tkinter_color_(avoid_color) -> str:
-    colors = ["white", "black", "red", "green", "blue", "cyan", "yellow", "magenta"]
-    if type(avoid_color) == type(str):
-        try:    colors.remove(str.lower(avoid_color))
-        except: print(f'Told me to avoid color={avoid_color} in `get_random_tkinter_color_`, but that color does not exists')
-    elif type(avoid_color) == type(int): colors.remove(colors[avoid_color])
+    colors = ["black", "red", "green", "blue", "cyan", "yellow", "magenta"]
+    # if type(avoid_color) == type(str):
+    #     try:    colors.remove(str.lower(avoid_color))
+    #     except: print(f'Told me to avoid color={avoid_color} in `get_random_tkinter_color_`, but that color does not exists')
+    # elif type(avoid_color) == type(int): colors.remove(colors[avoid_color])
     return colors[ random.randint(0,  len(colors) - 1  ) ]
 
 def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str) -> None:

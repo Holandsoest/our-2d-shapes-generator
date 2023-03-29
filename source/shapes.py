@@ -81,6 +81,8 @@ def calculate_shape_arms_(center_pos:loc.Pos, traces= 4, length_traces=10, rotat
 # Shapes
 class Star:
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0, depth_percentage=50):
+        rotation_rad %= math.pi * 2 / 5 # Shape repeats every 72 degrees
+
         self.center_pos = center_pos
         self.size_in_pixels = size_in_pixels
         self.rotation_rad=rotation_rad
@@ -114,6 +116,8 @@ class Star:
         return polygon_coordinates
 class Square:
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0):
+        rotation_rad %= math.pi * 2 / 4 # Shape repeats every 90 degrees
+
         self.center_pos = center_pos
         self.size_in_pixels = size_in_pixels
         self.rotation_rad=rotation_rad
@@ -122,6 +126,97 @@ class Square:
         self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=4, length_traces=size_in_pixels / 2, rotation_rad=rotation_rad)
 
         self.annotation=Annotation(2, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+    def get_polygon_coordinates(self):
+        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
+        polygon_coordinates = []
+        for node in self.outline_coordinates:
+            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
+            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
+        return polygon_coordinates
+class SymmetricTriangle:
+    def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0):
+        rotation_rad %= math.pi * 2 / 3 # Shape repeats every 60 degrees
+
+        self.center_pos = center_pos
+        self.size_in_pixels = size_in_pixels
+        self.rotation_rad=rotation_rad
+
+        # store the outline in a list
+        self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=3, length_traces=size_in_pixels / 2, rotation_rad=rotation_rad)
+
+        self.annotation=Annotation(5, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+    def get_polygon_coordinates(self):
+        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
+        polygon_coordinates = []
+        for node in self.outline_coordinates:
+            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
+            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
+        return polygon_coordinates
+class Heart:
+    def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0, depth_percentage=50):
+        rotation_rad %= math.pi * 2 # Shape repeats every 360 degrees
+        depth_percentage=min(80,max(20,depth_percentage)) # Limit depth percentage to 20-80
+
+        self.center_pos = center_pos
+        self.size_in_pixels = size_in_pixels
+        self.rotation_rad=rotation_rad
+        self.depth_percentage=depth_percentage
+
+        radius = size_in_pixels / 2
+        pi = math.pi
+        pi_2 = pi * 2
+
+        # store the outline in a list
+        self.outline_coordinates = []
+        
+        point_pos = calculate_arm_point_(center_pos,
+                                         length_trace=radius,
+                                         rotation_rad=3/2*pi + rotation_rad)
+        self.outline_coordinates.append(point_pos) # point of the hart
+        
+
+        self.outline_coordinates.append(calculate_arm_point_(center_pos,
+                                                             length_trace=radius*0.87,
+                                                             rotation_rad= 65/36*pi + rotation_rad)) # right arc 1
+        self.outline_coordinates.append(calculate_arm_point_(center_pos,
+                                                             length_trace=radius*1.08,
+                                                             rotation_rad= 11/90*pi + rotation_rad)) # right arc 2
+        self.outline_coordinates.append(calculate_arm_point_(center_pos,
+                                                             length_trace=radius*1.41,
+                                                             rotation_rad= 1/4*pi + rotation_rad)) # right arc 3
+        
+
+        upper_help_guide = calculate_arm_point_(point_pos,
+                                                length_trace=size_in_pixels,
+                                                rotation_rad= 1/2*pi + rotation_rad)
+        self.outline_coordinates.append(upper_help_guide)
+
+
+        hole_pos = calculate_arm_point_(point_pos,
+                                        length_trace=size_in_pixels*depth_percentage/100,
+                                        rotation_rad= 1/2*pi + rotation_rad)
+        self.outline_coordinates.append(hole_pos) # Hole
+        self.outline_coordinates.append(hole_pos) # Hole
+        
+
+        self.outline_coordinates.append(upper_help_guide)
+
+
+        self.outline_coordinates.append(calculate_arm_point_(center_pos,
+                                                             length_trace=radius*1.41,
+                                                             rotation_rad= 3/4*pi + rotation_rad)) # left arc 3
+        self.outline_coordinates.append(calculate_arm_point_(center_pos,
+                                                             length_trace=radius*1.08,
+                                                             rotation_rad= 79/90*pi + rotation_rad)) # left arc 2
+        self.outline_coordinates.append(calculate_arm_point_(center_pos,
+                                                             length_trace=radius*0.87,
+                                                             rotation_rad= 43/36*pi + rotation_rad)) # left arc 1
+        
+
+        self.outline_coordinates.append(point_pos) # point of the hart
+
+
+        self.annotation=Annotation(3, center_pos, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -221,14 +316,21 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             shape_color = get_random_tkinter_color_(avoid_color=canvas_background_color)
 
             # Choose shape
-            match random.randint(0,1):
+            match random.randint(0,3):
                 case 0: 
                     shape = Star(center_pos=shape_pos, size_in_pixels=shape_size,
-                                 rotation_rad=random.random() * math.pi * 2 / 5,
+                                 rotation_rad=random.random() * math.pi * 2,
                                  depth_percentage=random.randint(20,70))
                 case 1:
                     shape = Square(center_pos=shape_pos, size_in_pixels=shape_size,
-                                   rotation_rad=random.random() * math.pi / 2,)
+                                   rotation_rad=random.random() * math.pi * 2,)
+                case 2:
+                    shape = SymmetricTriangle(center_pos=shape_pos, size_in_pixels=shape_size,
+                                   rotation_rad=random.random() * math.pi * 2,)
+                case 3:
+                    shape = Heart(center_pos=shape_pos, size_in_pixels=shape_size,
+                                  rotation_rad=random.random() * math.pi * 2,
+                                  depth_percentage=random.randint(20,70))
                 case _:
                     raise Warning('Out of range; in the count of shapes.')
 

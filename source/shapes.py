@@ -62,7 +62,8 @@ def calculate_arm_point_(start_pos:loc.Pos, length_trace=1, rotation_rad=0.0) ->
     """uses the idea of the unit circle to calculate the position from a start position, rotation and length of the arm"""
     return loc.Pos(
         x= start_pos.x + length_trace * math.cos(rotation_rad),
-        y= start_pos.y + length_trace * (-math.sin(rotation_rad)) )
+        y= start_pos.y + length_trace * (-math.sin(rotation_rad)),
+        force_int=True)
 def calculate_shape_arms_(center_pos:loc.Pos, traces= 4, length_traces=10, rotation_rad=0) -> list:
     """Calculates multiple arms out of one point that give a outline"""
     output = []
@@ -175,15 +176,18 @@ class Heart:
         self.outline_coordinates.append(point_pos) # point of the hart
         
 
-        self.outline_coordinates.append(calculate_arm_point_(center_pos,
-                                                             length_trace=radius*0.87,
-                                                             rotation_rad= 65/36*pi + rotation_rad)) # right arc 1
+        # self.outline_coordinates.append(calculate_arm_point_(center_pos,
+        #                                                      length_trace=radius*0.87,
+        #                                                      rotation_rad= 65/36*pi + rotation_rad)) # right arc 1
         self.outline_coordinates.append(calculate_arm_point_(center_pos,
                                                              length_trace=radius*1.08,
                                                              rotation_rad= 11/90*pi + rotation_rad)) # right arc 2
+        # self.outline_coordinates.append(calculate_arm_point_(center_pos,
+        #                                                      length_trace=radius*1.41,
+        #                                                      rotation_rad= 1/4*pi + rotation_rad)) # right arc 3
         self.outline_coordinates.append(calculate_arm_point_(center_pos,
-                                                             length_trace=radius*1.41,
-                                                             rotation_rad= 1/4*pi + rotation_rad)) # right arc 3
+                                                             length_trace=radius*1.15,
+                                                             rotation_rad= 31/90*pi + rotation_rad)) # right arc 4
         
 
         upper_help_guide = calculate_arm_point_(point_pos,
@@ -203,18 +207,20 @@ class Heart:
 
 
         self.outline_coordinates.append(calculate_arm_point_(center_pos,
-                                                             length_trace=radius*1.41,
-                                                             rotation_rad= 3/4*pi + rotation_rad)) # left arc 3
+                                                             length_trace=radius*1.15,
+                                                             rotation_rad= 38/45*pi + rotation_rad)) # left arc 4
+        # self.outline_coordinates.append(calculate_arm_point_(center_pos,
+        #                                                      length_trace=radius*1.41,
+        #                                                      rotation_rad= 3/4*pi + rotation_rad)) # left arc 3
         self.outline_coordinates.append(calculate_arm_point_(center_pos,
                                                              length_trace=radius*1.08,
                                                              rotation_rad= 79/90*pi + rotation_rad)) # left arc 2
-        self.outline_coordinates.append(calculate_arm_point_(center_pos,
-                                                             length_trace=radius*0.87,
-                                                             rotation_rad= 43/36*pi + rotation_rad)) # left arc 1
+        # self.outline_coordinates.append(calculate_arm_point_(center_pos,
+        #                                                      length_trace=radius*0.87,
+        #                                                      rotation_rad= 43/36*pi + rotation_rad)) # left arc 1
         
 
         self.outline_coordinates.append(point_pos) # point of the hart
-
 
         self.annotation=Annotation(3, center_pos, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
@@ -224,7 +230,7 @@ class Heart:
             polygon_coordinates.append(  int(round(  node.x,  0  ))  )
             polygon_coordinates.append(  int(round(  node.y,  0  ))  )
         return polygon_coordinates
-
+    
 # Saving data to 
 def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_jpg=False, as_gif=False, as_bmp=False, as_eps=False) -> None:
     """Saves the `tkinter.Canvas` object as a image, on the location of `path_filename` as the chosen formats.
@@ -316,7 +322,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             shape_color = get_random_tkinter_color_(avoid_color=canvas_background_color)
 
             # Choose shape
-            match random.randint(0,3):
+            match random.randint(3,3):
                 case 0: 
                     shape = Star(center_pos=shape_pos, size_in_pixels=shape_size,
                                  rotation_rad=random.random() * math.pi * 2,
@@ -330,7 +336,8 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
                 case 3:
                     shape = Heart(center_pos=shape_pos, size_in_pixels=shape_size,
                                   rotation_rad=random.random() * math.pi * 2,
-                                  depth_percentage=random.randint(20,70))
+                                  depth_percentage=50)
+                                #   depth_percentage=random.randint(20,70))
                 case _:
                     raise Warning('Out of range; in the count of shapes.')
 
@@ -349,6 +356,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
         annotation_info.append(shape.annotation)
         canvas.create_polygon(shape.get_polygon_coordinates(),
                               outline=shape_color, width=1,
+                              smooth=1,
                               fill=shape_color)
     
     # Summit the data

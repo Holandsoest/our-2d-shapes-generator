@@ -234,7 +234,85 @@ class Heart:
             polygon_coordinates.append(  int(round(  node.x,  0  ))  )
             polygon_coordinates.append(  int(round(  node.y,  0  ))  )
         return polygon_coordinates
-    
+class HalfCircle:
+    def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0):
+        rotation_rad %= math.pi * 2 # Shape repeats every 360 degrees
+
+        self.center_pos = center_pos
+        self.size_in_pixels = size_in_pixels
+        self.rotation_rad=rotation_rad
+
+        radius = size_in_pixels / 2
+        pi = math.pi
+
+        # store the outline in a list
+        shape_dict = {
+            "right_top":    (1/6*pi,    radius),
+            "left_top":     (5/6*pi,    radius),
+            "right_center": (0,         radius*0.75),
+            "left_center":  (pi,        radius*0.75),
+            "left_bottom":  (5/4*pi,    radius*0.5),
+            "right_bottom": (7/4*pi,    radius*0.5)
+        }
+        self.outline_coordinates = []
+        
+        arm_rotation, arm_length = shape_dict["right_top"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["left_top"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["left_center"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        # self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["left_bottom"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["right_bottom"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["right_center"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        # self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["right_top"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+
+        self.annotation=Annotation(1, center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+    def get_polygon_coordinates(self):
+        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
+        polygon_coordinates = []
+        for node in self.outline_coordinates:
+            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
+            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
+        return polygon_coordinates
+class Circle:
+    def __init__(self, center_pos:loc.Pos, size_in_pixels=10):
+
+        self.center_pos = center_pos
+        self.size_in_pixels = size_in_pixels
+
+        radius = size_in_pixels / 2
+        pi = math.pi
+
+        # store the outline in a list
+        shape_dict = {
+            "right_top":    (1/4*pi,    math.sqrt( (radius**2) * 2)),
+            "left_top":     (3/4*pi,    math.sqrt( (radius**2) * 2)),
+            "left_bottom":  (5/4*pi,    math.sqrt( (radius**2) * 2)),
+            "right_bottom": (7/4*pi,    math.sqrt( (radius**2) * 2))
+        }
+        self.outline_coordinates = []
+        for dot in shape_dict:
+            arm_rotation, arm_length = shape_dict[dot]
+            self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation))
+
+        self.annotation=Annotation(0, center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+    def get_polygon_coordinates(self):
+        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
+        polygon_coordinates = []
+        for node in self.outline_coordinates:
+            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
+            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
+        return polygon_coordinates
+
 # Saving data to 
 def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_jpg=False, as_gif=False, as_bmp=False, as_eps=False) -> None:
     """Saves the `tkinter.Canvas` object as a image, on the location of `path_filename` as the chosen formats.
@@ -326,7 +404,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             shape_color = get_random_tkinter_color_(avoid_color=canvas_background_color)
 
             # Choose shape
-            match random.randint(2,2):
+            match random.randint(5,5):
                 case 0: 
                     shape = Star(center_pos=shape_pos, size_in_pixels=shape_size,
                                  rotation_rad=random.random() * math.pi * 2,
@@ -341,6 +419,11 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
                     shape = Heart(center_pos=shape_pos, size_in_pixels=shape_size,
                                   rotation_rad=random.random() * math.pi * 2,
                                   depth_percentage=random.randint(65,90))
+                case 4:
+                    shape = HalfCircle(center_pos=shape_pos, size_in_pixels=shape_size,
+                                  rotation_rad=random.random() * math.pi * 2)
+                case 5:
+                    shape = Circle(center_pos=shape_pos, size_in_pixels=shape_size)
                 case _:
                     raise Warning('Out of range; in the count of shapes.')
 
@@ -359,7 +442,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
         annotation_info.append(shape.annotation)
         canvas.create_polygon(shape.get_polygon_coordinates(),
                               outline=shape_color, width=1,
-                              smooth=1 if isinstance(shape, Heart) else 0,
+                              smooth=1 if isinstance(shape, Heart) or isinstance(shape, HalfCircle) or isinstance(shape, Circle) else 0,
                               fill=shape_color)
     
     # Summit the data
@@ -372,10 +455,10 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
 
 if __name__ == '__main__':
     img_size = loc.Pos(x=200, y=200)
-    path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'square')
+    path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'circle_200_single')
 
     image_code_start = 1
-    size_batch = 1000
+    size_batch = 200
     max_objects = 1
 
     

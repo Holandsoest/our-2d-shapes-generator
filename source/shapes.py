@@ -74,7 +74,7 @@ def calculate_shape_arms_(center_pos:loc.Pos, traces= 4, length_traces=10, rotat
         output.append(calculate_arm_point_(
             start_pos=      center_pos,
             length_trace=   length_traces,
-            rotation=   rotation + i * trace_rad_spacing
+            rotation_rad=   rotation + i * trace_rad_spacing
         ))
 
     return output
@@ -102,9 +102,9 @@ class Star:
         # store the outline in a list
         self.outline_coordinates = []
 
-        outer_points = calculate_shape_arms_(center_pos=center_pos, traces=5, length_traces=size_in_pixels / 2, rotation_rad=rotation_rad)
+        outer_points = calculate_shape_arms_(center_pos=center_pos, traces=5, length_traces=size_in_pixels / 2, rotation=rotation_rad)
         inner_points = calculate_shape_arms_(center_pos=center_pos, traces=5, length_traces=size_in_pixels / 200 * depth_percentage,
-                                         rotation_rad=rotation_rad + (math.pi / float(5)))
+                                         rotation=rotation_rad + (math.pi / float(5)))
 
         self.outline_coordinates.append(outer_points[0])
         self.outline_coordinates.append(inner_points[0])
@@ -134,7 +134,7 @@ class Square:
         self.rotation_rad=rotation_rad
 
         # store the outline in a list
-        self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=4, length_traces=size_in_pixels / 2, rotation_rad=rotation_rad)
+        self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=4, length_traces=size_in_pixels / 2, rotation=rotation_rad)
 
         self.annotation=Annotation(2, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
@@ -153,7 +153,7 @@ class SymmetricTriangle:
         self.rotation_rad=rotation_rad
 
         # store the outline in a list
-        self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=3, length_traces=size_in_pixels / 2, rotation_rad=rotation_rad)
+        self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=3, length_traces=size_in_pixels / 2, rotation=rotation_rad)
 
         self.annotation=Annotation(5, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
@@ -326,7 +326,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             shape_color = get_random_tkinter_color_(avoid_color=canvas_background_color)
 
             # Choose shape
-            match random.randint(3,3):
+            match random.randint(2,2):
                 case 0: 
                     shape = Star(center_pos=shape_pos, size_in_pixels=shape_size,
                                  rotation_rad=random.random() * math.pi * 2,
@@ -340,8 +340,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
                 case 3:
                     shape = Heart(center_pos=shape_pos, size_in_pixels=shape_size,
                                   rotation_rad=random.random() * math.pi * 2,
-                                  depth_percentage=50)
-                                #   depth_percentage=random.randint(20,70))
+                                  depth_percentage=random.randint(65,90))
                 case _:
                     raise Warning('Out of range; in the count of shapes.')
 
@@ -360,7 +359,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
         annotation_info.append(shape.annotation)
         canvas.create_polygon(shape.get_polygon_coordinates(),
                               outline=shape_color, width=1,
-                              smooth=1,
+                              smooth=1 if isinstance(shape, Heart) else 0,
                               fill=shape_color)
     
     # Summit the data
@@ -373,32 +372,11 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
 
 if __name__ == '__main__':
     img_size = loc.Pos(x=200, y=200)
-
-
-
-    import tkinter
-    root = tkinter.Tk()
-    canvas = tkinter.Canvas(root, bg="white", height=200, width=200)
-    canvas.pack()
-    shape = Heart(center_pos=loc.Pos(100,100), size_in_pixels=75,
-                  rotation_rad=7,
-                  depth_percentage=80)
-    canvas.create_polygon(shape.get_polygon_coordinates(),
-                          outline="blue", width=1,
-                          smooth=1,
-                          fill="blue")
-    canvas.update()
-    print("done?")
-    root.destroy()
-
-
-
-
-    path = os.path.join(os.getcwd(), 'files', 'shape_generator')
+    path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'square')
 
     image_code_start = 1
-    size_batch = 200
-    max_objects = 7
+    size_batch = 1000
+    max_objects = 1
 
     
     for image_code in range(image_code_start, image_code_start + size_batch):

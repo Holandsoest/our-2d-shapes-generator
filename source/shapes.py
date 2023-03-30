@@ -190,7 +190,7 @@ class Heart:
 
         # get location of the right side of the heart
         arm_rotation, arm_length = shape_dict["point_1"]
-        point_pos = calculate_arm_point_(center_pos, arm_length, arm_rotation)
+        point_pos = calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad)
         self.outline_coordinates.append(point_pos)
         self.outline_coordinates.append(point_pos)
 
@@ -206,7 +206,7 @@ class Heart:
         self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
 
         arm_rotation, arm_length = shape_dict["hole_7"]
-        hole_pos = calculate_arm_point_(point_pos, arm_length, arm_rotation)
+        hole_pos = calculate_arm_point_(point_pos, arm_length, arm_rotation + rotation_rad)
         self.outline_coordinates.append(hole_pos)
 
         # get location of the left side of the heart
@@ -381,7 +381,7 @@ if __name__ == '__main__':
     canvas = tkinter.Canvas(root, bg="white", height=200, width=200)
     canvas.pack()
     shape = Heart(center_pos=loc.Pos(100,100), size_in_pixels=75,
-                  rotation_rad=0,
+                  rotation_rad=7,
                   depth_percentage=80)
     canvas.create_polygon(shape.get_polygon_coordinates(),
                           outline="blue", width=1,

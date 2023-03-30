@@ -64,7 +64,7 @@ def calculate_arm_point_(start_pos:loc.Pos, length_trace=1, rotation_rad=0.0) ->
         x= start_pos.x + length_trace * math.cos(rotation_rad),
         y= start_pos.y + length_trace * (-math.sin(rotation_rad)),
         force_int=True)
-def calculate_shape_arms_(center_pos:loc.Pos, traces= 4, length_traces=10, rotation_rad=0) -> list:
+def calculate_shape_arms_(center_pos:loc.Pos, traces= 4, length_traces=10, rotation=0) -> list:
     """Calculates multiple arms out of one point that give a outline"""
     output = []
 
@@ -74,10 +74,20 @@ def calculate_shape_arms_(center_pos:loc.Pos, traces= 4, length_traces=10, rotat
         output.append(calculate_arm_point_(
             start_pos=      center_pos,
             length_trace=   length_traces,
-            rotation_rad=   rotation_rad + i * trace_rad_spacing
+            rotation=   rotation + i * trace_rad_spacing
         ))
 
     return output
+def angle_mirror_(rad_angle:float, mirror_vertical=False)->float:
+    # vertical mirror
+    if mirror_vertical:
+        rad_angle = math.pi - rad_angle
+        rad_angle %= math.pi * 2
+    return rad_angle
+
+
+
+    
 
 # Shapes
 class Star:
@@ -156,7 +166,7 @@ class SymmetricTriangle:
 class Heart:
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0, depth_percentage=50):
         rotation_rad %= math.pi * 2 # Shape repeats every 360 degrees
-        depth_percentage=min(80,max(20,depth_percentage)) # Limit depth percentage to 20-80
+        depth_percentage=min(95,max(40,depth_percentage)) # Limit depth percentage to 20-80
 
         self.center_pos = center_pos
         self.size_in_pixels = size_in_pixels
@@ -165,62 +175,56 @@ class Heart:
 
         radius = size_in_pixels / 2
         pi = math.pi
-        pi_2 = pi * 2
 
         # store the outline in a list
+        shape_dict = {
+            "point_1":      (3/2*pi,     radius),
+            "under_arch_2": (65/36*pi,   radius*0.87),
+            "right_3":      (1/9*pi,     radius*1.08),
+            "top_right_4":  (1/4*pi,     radius*1.25),#1.41
+            "top_5":        (31/90*pi,   radius*1.15),
+            "top_center_6": (4/9*pi,     radius*0.95),
+            "hole_7":       (1/2*pi,     size_in_pixels*depth_percentage/100) # use the point_pos as start_pos for this line
+        }
         self.outline_coordinates = []
+
+        # get location of the right side of the heart
+        arm_rotation, arm_length = shape_dict["point_1"]
+        point_pos = calculate_arm_point_(center_pos, arm_length, arm_rotation)
+        self.outline_coordinates.append(point_pos)
+        self.outline_coordinates.append(point_pos)
+
+        arm_rotation, arm_length = shape_dict["under_arch_2"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["right_3"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["top_right_4"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["top_5"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+        arm_rotation, arm_length = shape_dict["top_center_6"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
+
+        arm_rotation, arm_length = shape_dict["hole_7"]
+        hole_pos = calculate_arm_point_(point_pos, arm_length, arm_rotation)
+        self.outline_coordinates.append(hole_pos)
+
+        # get location of the left side of the heart
+        self.outline_coordinates.append(hole_pos)
         
-        point_pos = calculate_arm_point_(center_pos,
-                                         length_trace=radius,
-                                         rotation_rad=3/2*pi + rotation_rad)
-        self.outline_coordinates.append(point_pos) # point of the hart
-        
+        arm_rotation, arm_length = shape_dict["top_center_6"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, angle_mirror_(arm_rotation, mirror_vertical=True) + rotation_rad))
+        arm_rotation, arm_length = shape_dict["top_5"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, angle_mirror_(arm_rotation, mirror_vertical=True) + rotation_rad))
+        arm_rotation, arm_length = shape_dict["top_right_4"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, angle_mirror_(arm_rotation, mirror_vertical=True) + rotation_rad))
+        arm_rotation, arm_length = shape_dict["right_3"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, angle_mirror_(arm_rotation, mirror_vertical=True) + rotation_rad))
+        arm_rotation, arm_length = shape_dict["under_arch_2"]
+        self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, angle_mirror_(arm_rotation, mirror_vertical=True) + rotation_rad))
 
-        # self.outline_coordinates.append(calculate_arm_point_(center_pos,
-        #                                                      length_trace=radius*0.87,
-        #                                                      rotation_rad= 65/36*pi + rotation_rad)) # right arc 1
-        self.outline_coordinates.append(calculate_arm_point_(center_pos,
-                                                             length_trace=radius*1.08,
-                                                             rotation_rad= 11/90*pi + rotation_rad)) # right arc 2
-        # self.outline_coordinates.append(calculate_arm_point_(center_pos,
-        #                                                      length_trace=radius*1.41,
-        #                                                      rotation_rad= 1/4*pi + rotation_rad)) # right arc 3
-        self.outline_coordinates.append(calculate_arm_point_(center_pos,
-                                                             length_trace=radius*1.15,
-                                                             rotation_rad= 31/90*pi + rotation_rad)) # right arc 4
-        
-
-        upper_help_guide = calculate_arm_point_(point_pos,
-                                                length_trace=size_in_pixels,
-                                                rotation_rad= 1/2*pi + rotation_rad)
-        self.outline_coordinates.append(upper_help_guide)
-
-
-        hole_pos = calculate_arm_point_(point_pos,
-                                        length_trace=size_in_pixels*depth_percentage/100,
-                                        rotation_rad= 1/2*pi + rotation_rad)
-        self.outline_coordinates.append(hole_pos) # Hole
-        self.outline_coordinates.append(hole_pos) # Hole
-        
-
-        self.outline_coordinates.append(upper_help_guide)
-
-
-        self.outline_coordinates.append(calculate_arm_point_(center_pos,
-                                                             length_trace=radius*1.15,
-                                                             rotation_rad= 38/45*pi + rotation_rad)) # left arc 4
-        # self.outline_coordinates.append(calculate_arm_point_(center_pos,
-        #                                                      length_trace=radius*1.41,
-        #                                                      rotation_rad= 3/4*pi + rotation_rad)) # left arc 3
-        self.outline_coordinates.append(calculate_arm_point_(center_pos,
-                                                             length_trace=radius*1.08,
-                                                             rotation_rad= 79/90*pi + rotation_rad)) # left arc 2
-        # self.outline_coordinates.append(calculate_arm_point_(center_pos,
-        #                                                      length_trace=radius*0.87,
-        #                                                      rotation_rad= 43/36*pi + rotation_rad)) # left arc 1
-        
-
-        self.outline_coordinates.append(point_pos) # point of the hart
+        self.outline_coordinates.append(point_pos)
+        self.outline_coordinates.append(point_pos)
 
         self.annotation=Annotation(3, center_pos, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
@@ -368,8 +372,28 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
     root.destroy()
 
 if __name__ == '__main__':
-
     img_size = loc.Pos(x=200, y=200)
+
+
+
+    import tkinter
+    root = tkinter.Tk()
+    canvas = tkinter.Canvas(root, bg="white", height=200, width=200)
+    canvas.pack()
+    shape = Heart(center_pos=loc.Pos(100,100), size_in_pixels=75,
+                  rotation_rad=0,
+                  depth_percentage=80)
+    canvas.create_polygon(shape.get_polygon_coordinates(),
+                          outline="blue", width=1,
+                          smooth=1,
+                          fill="blue")
+    canvas.update()
+    print("done?")
+    root.destroy()
+
+
+
+
     path = os.path.join(os.getcwd(), 'files', 'shape_generator')
 
     image_code_start = 1

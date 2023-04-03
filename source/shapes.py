@@ -383,7 +383,7 @@ def get_random_tkinter_color_(avoid_color) -> str:
     # elif type(avoid_color) == type(int): colors.remove(colors[avoid_color])
     return colors[ random.randint(0,  len(colors) - 1  ) ]
 
-def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str) -> None:
+def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str, verbose=False) -> None:
     # Setup environment
     root = tkinter.Tk()
     canvas_background_color = 'white' # BUG thinker and PIL background not the same
@@ -404,7 +404,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             shape_color = get_random_tkinter_color_(avoid_color=canvas_background_color)
 
             # Choose shape
-            match random.randint(5,5):
+            match random.randint(0,5):
                 case 0: 
                     shape = Star(center_pos=shape_pos, size_in_pixels=shape_size,
                                  rotation_rad=random.random() * math.pi * 2,
@@ -451,19 +451,43 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str)
             as_jpg=True)
     save_annotation(annotation_info,
                     path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
+    if verbose:
+        for annotation in annotation_info:
+            center_pos = loc.Pos(x= annotation.x * img_size.x,
+                                 y= annotation.y * img_size.y)
+            size_shape = loc.Pos(x= annotation.width * img_size.x,
+                                 y= annotation.width * img_size.y)
+            box_top_left = loc.Pos(x= center_pos.x - size_shape.x / 2,
+                                   y= center_pos.y - size_shape.y / 2,
+                                   force_int=True)
+            box_bottom_right = loc.Pos(x= center_pos.x + size_shape.x / 2,
+                                       y= center_pos.y + size_shape.y / 2,
+                                       force_int=True)
+            # Mark center
+            # canvas.create_line(0,center_pos.y,img_size.x,center_pos.y, dash=(1,1), fill='gray')# horizontal
+            # canvas.create_line(center_pos.x,0,center_pos.x,img_size.y, dash=(1,1), fill='gray')# vertical
+
+            # Mark annotation
+            canvas.create_rectangle(box_top_left.x,box_top_left.y,
+                                    box_bottom_right.x,box_bottom_right.y)
+            
+            canvas.update()
+        # root.mainloop()
+        import time
+        time.sleep(10)
     root.destroy()
 
 if __name__ == '__main__':
-    img_size = loc.Pos(x=200, y=200)
+    img_size = loc.Pos(x=1250, y=1250)
     path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'circle_200_single')
 
     image_code_start = 1
-    size_batch = 200
-    max_objects = 1
+    size_batch = 10000
+    max_objects = 50
 
     
     for image_code in range(image_code_start, image_code_start + size_batch):
         create_random_image(image_code=image_code,
-                            objects=random.randint(1, max_objects),
+                            objects=max_objects,#random.randint(1, max_objects),
                             img_size=img_size,
-                            path=path)
+                            path=path, verbose=True)

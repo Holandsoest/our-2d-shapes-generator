@@ -457,7 +457,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
         # Mark all polygons
         for outline_coordinates in all_outline_coordinates:
             for coordinate in outline_coordinates:
-                canvas.create_rectangle(coordinate.x,coordinate.y,coordinate.x,coordinate.y) # draw dot on each coordinate
+                canvas.create_rectangle(coordinate.x-1,coordinate.y-1,coordinate.x+1,coordinate.y+1,outline='red',fill='blue',width=1) # draw dot on each coordinate
 
         for annotation in annotation_info:
             center_pos = loc.Pos(x= annotation.x * img_size.x,

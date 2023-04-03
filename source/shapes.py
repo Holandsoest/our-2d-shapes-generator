@@ -388,7 +388,7 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
     
     valid_area = False
     patience = 1.0
-    while(not valid_area and patience > 0):
+    while(not valid_area and patience > 0.0):
 
         # Generate shape properties
         shape_size = max(25, int(round(  (random.randint(15,50)/100.0) * patience * img_size.min()  ))) # gets 15-50% the size of the image_size, shrinks every loop due to patience. 25 px is smallest size
@@ -424,7 +424,7 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
                 valid_area = False
                 patience -= 0.01
                 break
-    if patience == 0:
+    if not valid_area:
         raise RuntimeError('Tried my best to get a shape, but no dice.')
     
     # Draw it on the canvas and return the shape
@@ -463,9 +463,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                                         circle=             image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_CIRCLE
 
                                         )
-        except:
-            print('This is really bad')
-            raise RuntimeError('Uh oh')
+        except: continue
         
         # Add the annotation to the list
         annotation_info.append(shape.annotation)
@@ -477,40 +475,43 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
             as_jpg=True)
     save_annotation(annotation_info,
                     path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
-    if verbose:
-        # Mark all polygons
-        for outline_coordinates in all_outline_coordinates:
-            for coordinate in outline_coordinates:
-                canvas.create_rectangle(coordinate.x-1,coordinate.y-1,coordinate.x+1,coordinate.y+1,outline='red',fill='blue',width=1) # draw dot on each coordinate
+    if not verbose:
+        root.destroy()
+        return
+    
+    # Mark all polygons
+    for outline_coordinates in all_outline_coordinates:
+        for coordinate in outline_coordinates:
+            canvas.create_rectangle(coordinate.x-1,coordinate.y-1,coordinate.x+1,coordinate.y+1,outline='red',fill='blue',width=1) # draw dot on each coordinate
 
-        for annotation in annotation_info:
-            center_pos = loc.Pos(x= annotation.x * img_size.x,
-                                 y= annotation.y * img_size.y)
-            size_shape = loc.Pos(x= annotation.width * img_size.x,
-                                 y= annotation.height * img_size.y)
-            box_top_left = loc.Pos(x= center_pos.x - size_shape.x / 2,
-                                   y= center_pos.y - size_shape.y / 2,
-                                   force_int=True)
-            box_bottom_right = loc.Pos(x= center_pos.x + size_shape.x / 2,
-                                       y= center_pos.y + size_shape.y / 2,
-                                       force_int=True)
-            # Mark center
-            # canvas.create_line(0,center_pos.y,img_size.x,center_pos.y, dash=(1,1), fill='gray')# horizontal
-            # canvas.create_line(center_pos.x,0,center_pos.x,img_size.y, dash=(1,1), fill='gray')# vertical
+    for annotation in annotation_info:
+        center_pos = loc.Pos(x= annotation.x * img_size.x,
+                                y= annotation.y * img_size.y)
+        size_shape = loc.Pos(x= annotation.width * img_size.x,
+                                y= annotation.height * img_size.y)
+        box_top_left = loc.Pos(x= center_pos.x - size_shape.x / 2,
+                                y= center_pos.y - size_shape.y / 2,
+                                force_int=True)
+        box_bottom_right = loc.Pos(x= center_pos.x + size_shape.x / 2,
+                                    y= center_pos.y + size_shape.y / 2,
+                                    force_int=True)
+        # Mark center
+        # canvas.create_line(0,center_pos.y,img_size.x,center_pos.y, dash=(1,1), fill='gray')# horizontal
+        # canvas.create_line(center_pos.x,0,center_pos.x,img_size.y, dash=(1,1), fill='gray')# vertical
 
-            # Mark annotation
-            canvas.create_rectangle(box_top_left.x,box_top_left.y,
-                                    box_bottom_right.x,box_bottom_right.y)
-        canvas.update()
-    root.destroy()
-def create_from_folder_receipt(folder_receipt:FolderReceipt, img_size:loc.Size) -> None:
+        # Mark annotation
+        canvas.create_rectangle(box_top_left.x,box_top_left.y,
+                                box_bottom_right.x,box_bottom_right.y)
+    root.title = f'{len(annotation_info)} of the {objects} that were requested'
+    root.mainloop()
+def create_from_folder_receipt(folder_receipt:FolderReceipt, img_size:loc.Size, verbose=False) -> None:
     for image_code in range(0, folder_receipt.amount_of_images):
         create_random_image(image_code=image_code,
                             objects=folder_receipt.objects_per_image,
                             img_size=img_size,
                             path=folder_receipt.path,
                             image_receipt=folder_receipt.image_receipt,
-                            verbose=False)
+                            verbose=verbose)
         
         # update `progress_bar` but there might not be one...
         try: progress_bar.next()
@@ -519,34 +520,51 @@ def create_from_folder_receipt(folder_receipt:FolderReceipt, img_size:loc.Size) 
 if __name__ == '__main__':
 
     # Settings
-    img_size = loc.Pos(x=200, y=200)
-    path = os.path.join(os.getcwd(), 'files', 'shape_generator')
+    img_size = loc.Pos(x=2000, y=2000)
+    path = os.path.join(os.getcwd(), 'files', 'shape_generator', '2000x2000')
     use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
+    verbose=False # for debugging only
 
     # What folders to generate
     receipts = (
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_CIRCLE),
 
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.MIX),
+        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.MIX),
 
-        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_STAR),
-        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_HEART),
-        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.MIX),
+        FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.MIX),
+
+        FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.MIX),
+
+        FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.MIX),
     )
     
     # Program
@@ -557,11 +575,11 @@ if __name__ == '__main__':
     if use_multithreading:
         threads = []
         for receipt in receipts:
-            thread = threading.Thread( target=create_from_folder_receipt, args=(receipt, img_size,))
+            thread = threading.Thread( target=create_from_folder_receipt, args=(receipt, img_size, verbose,))
             thread.start()
-            threads.append(thread, )
+            threads.append(thread)
         for thread in threads:
             thread.join()
     else:
         for receipt in receipts:
-            create_from_folder_receipt(receipt, img_size)
+            create_from_folder_receipt(receipt, img_size, verbose)

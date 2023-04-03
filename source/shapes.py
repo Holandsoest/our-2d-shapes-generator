@@ -350,6 +350,14 @@ def get_random_tkinter_color_(avoid_color) -> str:
     # elif type(avoid_color) == type(int): colors.remove(colors[avoid_color])
     return colors[ random.randint(0,  len(colors) - 1  ) ]
 
+class ImageReceipt(Enum):
+    MIX = 0
+    ONLY_STAR = 1
+    ONLY_SQUARE = 2
+    ONLY_SYMMETRIC_TRIANGLE = 3
+    ONLY_HEART = 4
+    ONLY_HALF_CIRCLE = 5
+    ONLY_CIRCLE = 6
 def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_areas:list[Annotation], draw_shape_on_canvas:bool, star=False, square=False, symmetric_triangle=False, heart=False, half_circle=False, circle=False):#TODO
     if not ( star or square or symmetric_triangle or heart or half_circle or circle ):
         raise SyntaxError('No shape selected to create.')
@@ -417,7 +425,7 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
                           smooth=1 if isinstance(shape, Heart) or isinstance(shape, HalfCircle) else 0,
                           fill=shape_color)
     return shape
-def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str, verbose=False) -> None:
+def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str, image_receipt:ImageReceipt | None, verbose=False) -> None:
     # Setup environment
     root = tkinter.Tk()
     canvas_background_color = 'white' # BUG thinker and PIL background not the same
@@ -433,15 +441,17 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                                         forbidden_areas=annotation_info,
                                         draw_shape_on_canvas=True,
 
-                                        star=True,
-                                        square=True,
-                                        symmetric_triangle=True,
-                                        heart=True,
-                                        half_circle=True,
-                                        circle=True
+                                        star=               image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_STAR,
+                                        square=             image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_SQUARE,
+                                        symmetric_triangle= image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_SYMMETRIC_TRIANGLE,
+                                        heart=              image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_HEART,
+                                        half_circle=        image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_HALF_CIRCLE,
+                                        circle=             image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_CIRCLE
 
                                         )
-        except: print('here')
+        except:
+            print('This is really bad')
+            raise RuntimeError('Uh oh')
         
         # Add the annotation to the list
         annotation_info.append(shape.annotation)
@@ -482,17 +492,43 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
 
 if __name__ == '__main__':
     img_size = loc.Pos(x=200, y=200)
-    path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'heart_1000_single')
+    path = os.path.join(os.getcwd(), 'files', 'shape_generator')
 
 
-    image_code_start = 1
-    size_batch = 1000
-    max_objects = 10
+    # Size of batch, Max objects, ImageReceipt
+    receipts = (
+        (500,   1,  ImageReceipt.ONLY_STAR),
+        (500,   1,  ImageReceipt.ONLY_SQUARE),
+        (500,   1,  ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        (500,   1,  ImageReceipt.ONLY_HEART),
+        (500,   1,  ImageReceipt.ONLY_HALF_CIRCLE),
+        (500,   1,  ImageReceipt.ONLY_CIRCLE),
 
-    
-    for image_code in range(image_code_start, image_code_start + size_batch):
-        create_random_image(image_code=image_code,
-                            objects=random.randint(1, max_objects),
-                            img_size=img_size,
-                            path=path,
-                            verbose=True)
+        (500,   10,  ImageReceipt.ONLY_STAR),
+        (500,   10,  ImageReceipt.ONLY_SQUARE),
+        (500,   10,  ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        (500,   10,  ImageReceipt.ONLY_HEART),
+        (500,   10,  ImageReceipt.ONLY_HALF_CIRCLE),
+        (500,   10,  ImageReceipt.ONLY_CIRCLE),
+        (500,   10,  ImageReceipt.MIX),
+
+        (500,   50,  ImageReceipt.ONLY_STAR),
+        (500,   50,  ImageReceipt.ONLY_SQUARE),
+        (500,   50,  ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        (500,   50,  ImageReceipt.ONLY_HEART),
+        (500,   50,  ImageReceipt.ONLY_HALF_CIRCLE),
+        (500,   50,  ImageReceipt.ONLY_CIRCLE),
+        (500,   50,  ImageReceipt.MIX),
+    )
+
+
+    for receipt in receipts:
+        path = os.path.join(path, f'{receipt[0]}_{receipt[1]}_{receipt[2].name.lower()}')
+
+        for image_code in range(0, receipt[0]):
+            create_random_image(image_code=image_code,
+                                objects=receipt[1],
+                                img_size=img_size,
+                                path=path,
+                                image_receipt=receipt[2],
+                                verbose=False)

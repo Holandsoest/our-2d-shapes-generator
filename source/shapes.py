@@ -1,6 +1,7 @@
 import common.location as loc
 from enum import Enum # Keep enums UPPER_CASE according to https://docs.python.org/3/howto/enum.html  
 from progress.bar import ShadyBar
+import threading
 import tkinter
 import random
 import math
@@ -359,6 +360,18 @@ class ImageReceipt(Enum):
     ONLY_HEART = 4
     ONLY_HALF_CIRCLE = 5
     ONLY_CIRCLE = 6
+class FolderReceipt:
+    def __init__(self, path:str, amount_of_images:int, objects_per_image:int, image_receipt:ImageReceipt):
+        self.amount_of_images=amount_of_images
+        self.objects_per_image=objects_per_image
+        self.image_receipt=image_receipt
+        self.name=f'{amount_of_images}_{objects_per_image}_{image_receipt.name.lower()}'
+        self.path=os.path.join(path, self.name)
+class FancyBar(ShadyBar):
+    message = 'Total progress'
+    suffix = '[%(index)d/%(max)d]  -  %(percent).1f%%  -  %(eta_td)s remaining  -  %(elapsed_td)s elapsed'
+    # suffix = '[%(index)d/%(max)d]\t%(percent)d%\t[%(eta_td)s remaining]\t[%(elapsed_td)s remaining]'
+    
 def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_areas:list[Annotation], draw_shape_on_canvas:bool, star=False, square=False, symmetric_triangle=False, heart=False, half_circle=False, circle=False):#TODO
     if not ( star or square or symmetric_triangle or heart or half_circle or circle ):
         raise SyntaxError('No shape selected to create.')
@@ -490,52 +503,65 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                                     box_bottom_right.x,box_bottom_right.y)
         canvas.update()
     root.destroy()
+def create_from_folder_receipt(folder_receipt:FolderReceipt, img_size:loc.Size) -> None:
+    for image_code in range(0, folder_receipt.amount_of_images):
+        create_random_image(image_code=image_code,
+                            objects=folder_receipt.objects_per_image,
+                            img_size=img_size,
+                            path=folder_receipt.path,
+                            image_receipt=folder_receipt.image_receipt,
+                            verbose=False)
+        
+        # update `progress_bar` but there might not be one...
+        try: progress_bar.next()
+        except NameError: pass
 
 if __name__ == '__main__':
+
+    # Settings
     img_size = loc.Pos(x=200, y=200)
     path = os.path.join(os.getcwd(), 'files', 'shape_generator')
+    use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
 
-
-    # Size of batch, Max objects, ImageReceipt
+    # What folders to generate
     receipts = (
-        (500,   1,  ImageReceipt.ONLY_STAR),
-        (500,   1,  ImageReceipt.ONLY_SQUARE),
-        (500,   1,  ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        (500,   1,  ImageReceipt.ONLY_HEART),
-        (500,   1,  ImageReceipt.ONLY_HALF_CIRCLE),
-        (500,   1,  ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_CIRCLE),
 
-        (500,   10,  ImageReceipt.ONLY_STAR),
-        (500,   10,  ImageReceipt.ONLY_SQUARE),
-        (500,   10,  ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        (500,   10,  ImageReceipt.ONLY_HEART),
-        (500,   10,  ImageReceipt.ONLY_HALF_CIRCLE),
-        (500,   10,  ImageReceipt.ONLY_CIRCLE),
-        (500,   10,  ImageReceipt.MIX),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=10,   image_receipt=ImageReceipt.MIX),
 
-        (500,   50,  ImageReceipt.ONLY_STAR),
-        (500,   50,  ImageReceipt.ONLY_SQUARE),
-        (500,   50,  ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        (500,   50,  ImageReceipt.ONLY_HEART),
-        (500,   50,  ImageReceipt.ONLY_HALF_CIRCLE),
-        (500,   50,  ImageReceipt.ONLY_CIRCLE),
-        (500,   50,  ImageReceipt.MIX),
+        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_STAR),
+        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_HEART),
+        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        # FolderReceipt(path,   amount_of_images=500,   objects_per_image=50,   image_receipt=ImageReceipt.MIX),
     )
+    
+    # Program
     total_img = 0
-    for r in receipts:
-        total_img += r[0]
+    for receipt in receipts: total_img += receipt.amount_of_images
+    progress_bar = FancyBar('Total progress', max=total_img)
 
-    progress_bar = ShadyBar('Total script', max=total_img, suffix='[%(index)d/%(max)d]\t[%(percent).1f%%]\t[%(eta)dsec]')
-    for receipt in receipts:
-        path = os.path.join(path, f'{receipt[0]}_{receipt[1]}_{receipt[2].name.lower()}')
-
-        for image_code in range(0, receipt[0]):
-            progress_bar.next()
-            
-            create_random_image(image_code=image_code,
-                                objects=receipt[1],
-                                img_size=img_size,
-                                path=path,
-                                image_receipt=receipt[2],
-                                verbose=False)
-            
+    if use_multithreading:
+        threads = []
+        for receipt in receipts:
+            thread = threading.Thread( target=create_from_folder_receipt, args=(receipt, img_size,))
+            thread.start()
+            threads.append(thread, )
+        for thread in threads:
+            thread.join()
+    else:
+        for receipt in receipts:
+            create_from_folder_receipt(receipt, img_size)

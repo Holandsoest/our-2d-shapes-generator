@@ -1,5 +1,6 @@
 import common.location as loc
 from enum import Enum # Keep enums UPPER_CASE according to https://docs.python.org/3/howto/enum.html  
+from progress.bar import ShadyBar
 import tkinter
 import random
 import math
@@ -520,15 +521,21 @@ if __name__ == '__main__':
         (500,   50,  ImageReceipt.ONLY_CIRCLE),
         (500,   50,  ImageReceipt.MIX),
     )
+    total_img = 0
+    for r in receipts:
+        total_img += r[0]
 
-
+    progress_bar = ShadyBar('Total script', max=total_img, suffix='[%(index)d/%(max)d]\t[%(percent).1f%%]\t[%(eta)dsec]')
     for receipt in receipts:
         path = os.path.join(path, f'{receipt[0]}_{receipt[1]}_{receipt[2].name.lower()}')
 
         for image_code in range(0, receipt[0]):
+            progress_bar.next()
+            
             create_random_image(image_code=image_code,
                                 objects=receipt[1],
                                 img_size=img_size,
                                 path=path,
                                 image_receipt=receipt[2],
                                 verbose=False)
+            

@@ -1,4 +1,5 @@
 import common.location as loc
+from enum import Enum # Keep enums UPPER_CASE according to https://docs.python.org/3/howto/enum.html  
 import tkinter
 import random
 import math
@@ -18,7 +19,7 @@ class Annotation:
         
         `coordinates` a list of positions with x and y values"""
         assert class_id >= 0
-        
+
         self.class_id=str(class_id)
 
         # Find most up, left, right, down. Coordinates
@@ -29,6 +30,10 @@ class Annotation:
             if coordinate.y < pos_top_left.y:      pos_top_left.y = coordinate.y
             if coordinate.x > pos_bottom_right.x:  pos_bottom_right.x = coordinate.x
             if coordinate.y > pos_bottom_right.y:  pos_bottom_right.y = coordinate.y
+        self.box = loc.Box(x=     pos_top_left.x,
+                           y=     pos_top_left.y,
+                           width= pos_bottom_right.x - pos_top_left.x,
+                           height=pos_bottom_right.y - pos_top_left.y)
 
         pos_center = loc.Pos(x= pos_top_left.x + (pos_bottom_right.x - pos_top_left.x) / 2.0,
                              y= pos_top_left.y + (pos_bottom_right.y - pos_top_left.y) / 2.0)
@@ -86,7 +91,15 @@ def angle_mirror_(rad_angle:float, mirror_vertical=False)->float:
     return rad_angle
 
 # Shapes
-class Star:
+class Shape:
+    def get_polygon_coordinates(self) -> list:
+        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
+        polygon_coordinates = []
+        for node in self.outline_coordinates:
+            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
+            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
+        return polygon_coordinates
+class Star(Shape):
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0, depth_percentage=50):
         rotation_rad %= math.pi * 2 / 5 # Shape repeats every 72 degrees
 
@@ -114,14 +127,7 @@ class Star:
         self.outline_coordinates.append(inner_points[4])
 
         self.annotation=Annotation(4, image_size=img_size, coordinates=self.outline_coordinates)
-    def get_polygon_coordinates(self):
-        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
-        polygon_coordinates = []
-        for node in self.outline_coordinates:
-            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
-            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
-        return polygon_coordinates
-class Square:
+class Square(Shape):
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0):
         rotation_rad %= math.pi * 2 / 4 # Shape repeats every 90 degrees
 
@@ -133,14 +139,7 @@ class Square:
         self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=4, length_traces=size_in_pixels / 2, rotation=rotation_rad)
 
         self.annotation=Annotation(2, image_size=img_size, coordinates=self.outline_coordinates)
-    def get_polygon_coordinates(self):
-        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
-        polygon_coordinates = []
-        for node in self.outline_coordinates:
-            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
-            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
-        return polygon_coordinates
-class SymmetricTriangle:
+class SymmetricTriangle(Shape):
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0):
         rotation_rad %= math.pi * 2 / 3 # Shape repeats every 60 degrees
 
@@ -152,14 +151,7 @@ class SymmetricTriangle:
         self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=3, length_traces=size_in_pixels / 2, rotation=rotation_rad)
 
         self.annotation=Annotation(5, image_size=img_size, coordinates=self.outline_coordinates)
-    def get_polygon_coordinates(self):
-        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
-        polygon_coordinates = []
-        for node in self.outline_coordinates:
-            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
-            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
-        return polygon_coordinates
-class Heart:
+class Heart(Shape):
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0, depth_percentage=50):
         rotation_rad %= math.pi * 2 # Shape repeats every 360 degrees
         depth_percentage=min(95,max(40,depth_percentage)) # Limit depth percentage to 20-80
@@ -223,14 +215,7 @@ class Heart:
         self.outline_coordinates.append(point_pos)
 
         self.annotation=Annotation(3, image_size=img_size, coordinates=self.outline_coordinates)
-    def get_polygon_coordinates(self):
-        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
-        polygon_coordinates = []
-        for node in self.outline_coordinates:
-            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
-            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
-        return polygon_coordinates
-class HalfCircle:
+class HalfCircle(Shape):
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0):
         rotation_rad %= math.pi * 2 # Shape repeats every 360 degrees
 
@@ -272,14 +257,7 @@ class HalfCircle:
         self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
 
         self.annotation=Annotation(1, image_size=img_size, coordinates=self.outline_coordinates)
-    def get_polygon_coordinates(self):
-        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
-        polygon_coordinates = []
-        for node in self.outline_coordinates:
-            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
-            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
-        return polygon_coordinates
-class Circle:
+class Circle(Shape):
     def __init__(self, center_pos:loc.Pos, size_in_pixels=10):
 
         self.center_pos = center_pos
@@ -301,13 +279,6 @@ class Circle:
             self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation))
 
         self.annotation=Annotation(0, image_size=img_size, coordinates=self.outline_coordinates)
-    def get_polygon_coordinates(self):
-        """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
-        polygon_coordinates = []
-        for node in self.outline_coordinates:
-            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
-            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
-        return polygon_coordinates
 
 # Saving data to 
 def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_jpg=False, as_gif=False, as_bmp=False, as_eps=False) -> None:
@@ -379,69 +350,102 @@ def get_random_tkinter_color_(avoid_color) -> str:
     # elif type(avoid_color) == type(int): colors.remove(colors[avoid_color])
     return colors[ random.randint(0,  len(colors) - 1  ) ]
 
+def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_areas:list[Annotation], draw_shape_on_canvas:bool, star=False, square=False, symmetric_triangle=False, heart=False, half_circle=False, circle=False):#TODO
+    if not ( star or square or symmetric_triangle or heart or half_circle or circle ):
+        raise SyntaxError('No shape selected to create.')
+
+    # Determine shape
+    shapes = []
+    if star:                shapes.append('star')
+    if square:              shapes.append('square')
+    if symmetric_triangle:  shapes.append('symmetric_triangle')
+    if heart:               shapes.append('heart')
+    if half_circle:         shapes.append('half_circle')
+    if circle:              shapes.append('circle')
+    shape_shape = shapes[random.randint(0, len(shapes)-1 )]
+    
+    valid_area = False
+    patience = 1.0
+    while(not valid_area and patience > 0):
+
+        # Generate shape properties
+        shape_size = max(25, int(round(  (random.randint(15,50)/100.0) * patience * img_size.min()  ))) # gets 15-50% the size of the image_size, shrinks every loop due to patience. 25 px is smallest size
+        shape_center_pos = loc.Pos(x=random.randint(int(shape_size/2), img_size.x - int(shape_size/2)),
+                                   y=random.randint(int(shape_size/2), img_size.y - int(shape_size/2)),
+                                   force_int=True)
+        shape_color = get_random_tkinter_color_(avoid_color='white')
+        shape_rotation = random.random() * math.pi * 2
+
+        # Generate Shape
+        match shape_shape:
+            case 'star': 
+                shape = Star(shape_center_pos, size_in_pixels=shape_size, rotation_rad=shape_rotation,
+                                depth_percentage=random.randint(20,70))
+            case 'square':
+                shape = Square(shape_center_pos, size_in_pixels=shape_size, rotation_rad=shape_rotation)
+            case 'symmetric_triangle':
+                shape = SymmetricTriangle(shape_center_pos, size_in_pixels=shape_size, rotation_rad=shape_rotation)
+            case 'heart':
+                shape = Heart(shape_center_pos, size_in_pixels=shape_size, rotation_rad=shape_rotation,
+                              depth_percentage=random.randint(65,90))
+            case 'half_circle':
+                shape = HalfCircle(shape_center_pos, size_in_pixels=shape_size, rotation_rad=shape_rotation)
+            case 'circle':
+                shape = Circle(shape_center_pos, size_in_pixels=shape_size)
+            case _:
+                raise Warning('Out of range; in the count of shapes.')
+
+        # Check if this shape collides with forbidden_areas, otherwise grab new shape
+        valid_area = True
+        for annotation in forbidden_areas:
+            if shape.annotation.box.overlaps(annotation.box):
+                valid_area = False
+                patience -= 0.01
+                break
+    if patience == 0:
+        raise RuntimeError('Tried my best to get a shape, but no dice.')
+    
+    # Draw it on the canvas and return the shape
+    if isinstance(shape, Circle):
+        canvas.create_oval(shape.annotation.box.pos.x, shape.annotation.box.pos.y, shape.annotation.box.pos.x + shape.annotation.box.size.x, shape.annotation.box.pos.y + shape.annotation.box.size.y,
+                           outline=shape_color, width=1,
+                           fill=shape_color)
+        return shape
+    
+    canvas.create_polygon(shape.get_polygon_coordinates(),
+                          outline=shape_color, width=1,
+                          smooth=1 if isinstance(shape, Heart) or isinstance(shape, HalfCircle) else 0,
+                          fill=shape_color)
+    return shape
 def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str, verbose=False) -> None:
     # Setup environment
     root = tkinter.Tk()
     canvas_background_color = 'white' # BUG thinker and PIL background not the same
-    canvas = tkinter.Canvas(root, bg=canvas_background_color, height=img_size.y, width=img_size.x)
+    canvas = tkinter.Canvas(root, bg=canvas_background_color, height=img_size.y, width=img_size.x, takefocus=0)
     annotation_info = []
     all_outline_coordinates = []
 
     # Generate shapes
     for i in range(0, objects):
-        collision_with_previous_shape = True
-        collision_attempts = 0
-        while (collision_with_previous_shape and not (collision_attempts > 100 and i > 0)):
+        try:
+            shape = create_random_shape(canvas=canvas,
+                                        img_size=img_size,
+                                        forbidden_areas=annotation_info,
+                                        draw_shape_on_canvas=True,
 
-            # Get parameters
-            shape_size = int(random.randint(50, int(img_size.min() / 2)))
-            shape_pos = loc.Pos(x=random.randint(int(shape_size/2), img_size.x - int(shape_size/2)),
-                                y=random.randint(int(shape_size/2), img_size.y - int(shape_size/2)),
-                                force_int=True)
-            shape_color = get_random_tkinter_color_(avoid_color=canvas_background_color)
+                                        star=True,
+                                        square=True,
+                                        symmetric_triangle=True,
+                                        heart=True,
+                                        half_circle=True,
+                                        circle=True
 
-            # Choose shape
-            match random.randint(0,5):
-                case 0: 
-                    shape = Star(center_pos=shape_pos, size_in_pixels=shape_size,
-                                 rotation_rad=random.random() * math.pi * 2,
-                                 depth_percentage=random.randint(20,70))
-                case 1:
-                    shape = Square(center_pos=shape_pos, size_in_pixels=shape_size,
-                                   rotation_rad=random.random() * math.pi * 2,)
-                case 2:
-                    shape = SymmetricTriangle(center_pos=shape_pos, size_in_pixels=shape_size,
-                                   rotation_rad=random.random() * math.pi * 2,)
-                case 3:
-                    shape = Heart(center_pos=shape_pos, size_in_pixels=shape_size,
-                                  rotation_rad=random.random() * math.pi * 2,
-                                  depth_percentage=random.randint(65,90))
-                case 4:
-                    shape = HalfCircle(center_pos=shape_pos, size_in_pixels=shape_size,
-                                  rotation_rad=random.random() * math.pi * 2)
-                case 5:
-                    shape = Circle(center_pos=shape_pos, size_in_pixels=shape_size)
-                case _:
-                    raise Warning('Out of range; in the count of shapes.')
-
-
-            # In case this collides with another existing shape then skip it
-            collision_with_previous_shape = False
-            collision_attempts += 1
-            for existing_annotation in annotation_info:
-                if shape.annotation.collides(existing_annotation):
-                    collision_with_previous_shape = True
-                    print(f'Debug: Collision: Position.\timage_code={image_code}\tshape=({i}/{objects})')
-                    break
-        if collision_attempts > 100: continue
+                                        )
+        except: print('here')
         
-        # In case it does not collide then add the annotation to the list and draw it on the canvas
+        # Add the annotation to the list
         annotation_info.append(shape.annotation)
         all_outline_coordinates.append(shape.outline_coordinates)
-        canvas.create_polygon(shape.get_polygon_coordinates(),
-                              outline=shape_color, width=1,
-                              smooth=1 if isinstance(shape, Heart) or isinstance(shape, HalfCircle) or isinstance(shape, Circle) else 0,
-                              fill=shape_color)
     
     # Summit the data
     save_img(tkinter_canvas=canvas,
@@ -477,16 +481,18 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
     root.destroy()
 
 if __name__ == '__main__':
-    img_size = loc.Pos(x=1250, y=1250)
-    path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'circle_200_single')
+    img_size = loc.Pos(x=200, y=200)
+    path = os.path.join(os.getcwd(), 'files', 'shape_generator', 'heart_1000_single')
+
 
     image_code_start = 1
-    size_batch = 10000
-    max_objects = 100
+    size_batch = 1000
+    max_objects = 10
 
     
     for image_code in range(image_code_start, image_code_start + size_batch):
         create_random_image(image_code=image_code,
                             objects=random.randint(1, max_objects),
                             img_size=img_size,
-                            path=path)
+                            path=path,
+                            verbose=True)

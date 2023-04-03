@@ -32,14 +32,14 @@ class Annotation:
 
         pos_center = loc.Pos(x= pos_top_left.x + (pos_bottom_right.x - pos_top_left.x) / 2.0,
                              y= pos_top_left.y + (pos_bottom_right.y - pos_top_left.y) / 2.0)
+        shape_size = loc.Pos(x= pos_bottom_right.x - pos_top_left.x,
+                             y= pos_bottom_right.y - pos_top_left.y)
         
         self.x=float(pos_center.x)/float(image_size.x)
         self.y=float(pos_center.y)/float(image_size.y)
 
-        dx = pos_bottom_right.x - pos_top_left.x
-        dy = pos_bottom_right.y - pos_top_left.y
-        self.width = float(dx)/float(img_size.x)
-        self.height = float(dy)/float(img_size.y)
+        self.width =  shape_size.x / float(img_size.x)
+        self.height = shape_size.y / float(img_size.y)
     def __str__(self) -> str:
         """`class_id x y width height`"""
         return f'{self.class_id} {self.x} {self.y} {self.width} {self.height}'
@@ -84,10 +84,6 @@ def angle_mirror_(rad_angle:float, mirror_vertical=False)->float:
         rad_angle = math.pi - rad_angle
         rad_angle %= math.pi * 2
     return rad_angle
-
-
-
-    
 
 # Shapes
 class Star:
@@ -463,7 +459,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
             center_pos = loc.Pos(x= annotation.x * img_size.x,
                                  y= annotation.y * img_size.y)
             size_shape = loc.Pos(x= annotation.width * img_size.x,
-                                 y= annotation.width * img_size.y)
+                                 y= annotation.height * img_size.y)
             box_top_left = loc.Pos(x= center_pos.x - size_shape.x / 2,
                                    y= center_pos.y - size_shape.y / 2,
                                    force_int=True)
@@ -471,8 +467,8 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                                        y= center_pos.y + size_shape.y / 2,
                                        force_int=True)
             # Mark center
-            canvas.create_line(0,center_pos.y,img_size.x,center_pos.y, dash=(1,1), fill='gray')# horizontal
-            canvas.create_line(center_pos.x,0,center_pos.x,img_size.y, dash=(1,1), fill='gray')# vertical
+            # canvas.create_line(0,center_pos.y,img_size.x,center_pos.y, dash=(1,1), fill='gray')# horizontal
+            # canvas.create_line(center_pos.x,0,center_pos.x,img_size.y, dash=(1,1), fill='gray')# vertical
 
             # Mark annotation
             canvas.create_rectangle(box_top_left.x,box_top_left.y,
@@ -486,11 +482,11 @@ if __name__ == '__main__':
 
     image_code_start = 1
     size_batch = 10000
-    max_objects = 50
+    max_objects = 100
 
     
     for image_code in range(image_code_start, image_code_start + size_batch):
         create_random_image(image_code=image_code,
-                            objects=max_objects,#random.randint(1, max_objects),
+                            objects=random.randint(1, max_objects),
                             img_size=img_size,
-                            path=path, verbose=True)
+                            path=path)

@@ -10,11 +10,9 @@ class Annotation:
     the syntax of our annotation goes as follows `class_id x y width height`  
     the class_id points to what shape it is.
     the rest is a float between 0 - 1"""
-    def __init__(self, class_id:int, center_pos:loc.Pos, image_size:loc.Pos, coordinates:list) -> None:
+    def __init__(self, class_id:int, image_size:loc.Pos, coordinates:list) -> None:
         """## Constructor
         `class_id` a int between  0 - n, wherein n is the amount of machine learning objects there are. See `object_names_array` in the machine learning training model for more info.
-        
-        `center_pos` the x and y coordinates of the center of the object
         
         `image_size` the x=width and y=hight of the image in pixels
         
@@ -22,23 +20,25 @@ class Annotation:
         assert class_id >= 0
         
         self.class_id=str(class_id)
-        self.x=float(center_pos.x)/float(image_size.x)
-        self.y=float(center_pos.y)/float(image_size.y)
 
-        min_x = coordinates[0].x
-        max_x = coordinates[0].x
-        for pos in coordinates:
-            min_x = min(min_x, pos.x)
-            max_x = max(max_x, pos.x)
-        dx = max_x - min_x
+        # Find most up, left, right, down. Coordinates
+        pos_top_left = loc.Pos(coordinates[0].x, coordinates[0].y)
+        pos_bottom_right = loc.Pos(coordinates[0].x, coordinates[0].y)
+        for coordinate in coordinates:
+            if coordinate.x < pos_top_left.x:      pos_top_left.x = coordinate.x
+            if coordinate.y < pos_top_left.y:      pos_top_left.y = coordinate.y
+            if coordinate.x > pos_bottom_right.x:  pos_bottom_right.x = coordinate.x
+            if coordinate.y > pos_bottom_right.y:  pos_bottom_right.y = coordinate.y
+
+        pos_center = loc.Pos(x= pos_top_left.x + (pos_bottom_right.x - pos_top_left.x) / 2.0,
+                             y= pos_top_left.y + (pos_bottom_right.y - pos_top_left.y) / 2.0)
+        
+        self.x=float(pos_center.x)/float(image_size.x)
+        self.y=float(pos_center.y)/float(image_size.y)
+
+        dx = pos_bottom_right.x - pos_top_left.x
+        dy = pos_bottom_right.y - pos_top_left.y
         self.width = float(dx)/float(img_size.x)
-
-        min_y = coordinates[0].y
-        max_y = coordinates[0].y
-        for pos in coordinates:
-            min_y = min(min_y, pos.y)
-            max_y = max(max_y, pos.y)
-        dy = max_y - min_y
         self.height = float(dy)/float(img_size.y)
     def __str__(self) -> str:
         """`class_id x y width height`"""
@@ -117,7 +117,7 @@ class Star:
         self.outline_coordinates.append(outer_points[4])
         self.outline_coordinates.append(inner_points[4])
 
-        self.annotation=Annotation(4, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+        self.annotation=Annotation(4, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -136,7 +136,7 @@ class Square:
         # store the outline in a list
         self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=4, length_traces=size_in_pixels / 2, rotation=rotation_rad)
 
-        self.annotation=Annotation(2, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+        self.annotation=Annotation(2, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -155,7 +155,7 @@ class SymmetricTriangle:
         # store the outline in a list
         self.outline_coordinates = calculate_shape_arms_(center_pos=center_pos, traces=3, length_traces=size_in_pixels / 2, rotation=rotation_rad)
 
-        self.annotation=Annotation(5, center_pos=center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+        self.annotation=Annotation(5, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -226,7 +226,7 @@ class Heart:
         self.outline_coordinates.append(point_pos)
         self.outline_coordinates.append(point_pos)
 
-        self.annotation=Annotation(3, center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+        self.annotation=Annotation(3, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -275,7 +275,7 @@ class HalfCircle:
         self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
         self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation + rotation_rad))
 
-        self.annotation=Annotation(1, center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+        self.annotation=Annotation(1, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -304,7 +304,7 @@ class Circle:
             arm_rotation, arm_length = shape_dict[dot]
             self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation))
 
-        self.annotation=Annotation(0, center_pos, image_size=img_size, coordinates=self.outline_coordinates)
+        self.annotation=Annotation(0, image_size=img_size, coordinates=self.outline_coordinates)
     def get_polygon_coordinates(self):
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
@@ -377,7 +377,7 @@ def save_annotation(list_of_annotations:list, path_filename:str) -> None:
 
 def get_random_tkinter_color_(avoid_color) -> str:
     colors = ["black", "red", "green", "blue", "cyan", "yellow", "magenta"]
-    # if type(avoid_color) == type(str):
+    # if type(avoid_color) == type(str): TODO
     #     try:    colors.remove(str.lower(avoid_color))
     #     except: print(f'Told me to avoid color={avoid_color} in `get_random_tkinter_color_`, but that color does not exists')
     # elif type(avoid_color) == type(int): colors.remove(colors[avoid_color])
@@ -389,6 +389,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
     canvas_background_color = 'white' # BUG thinker and PIL background not the same
     canvas = tkinter.Canvas(root, bg=canvas_background_color, height=img_size.y, width=img_size.x)
     annotation_info = []
+    all_outline_coordinates = []
 
     # Generate shapes
     for i in range(0, objects):
@@ -440,6 +441,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
         
         # In case it does not collide then add the annotation to the list and draw it on the canvas
         annotation_info.append(shape.annotation)
+        all_outline_coordinates.append(shape.outline_coordinates)
         canvas.create_polygon(shape.get_polygon_coordinates(),
                               outline=shape_color, width=1,
                               smooth=1 if isinstance(shape, Heart) or isinstance(shape, HalfCircle) or isinstance(shape, Circle) else 0,
@@ -452,6 +454,11 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
     save_annotation(annotation_info,
                     path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
     if verbose:
+        # Mark all polygons
+        for outline_coordinates in all_outline_coordinates:
+            for coordinate in outline_coordinates:
+                canvas.create_rectangle(coordinate.x,coordinate.y,coordinate.x,coordinate.y) # draw dot on each coordinate
+
         for annotation in annotation_info:
             center_pos = loc.Pos(x= annotation.x * img_size.x,
                                  y= annotation.y * img_size.y)
@@ -464,17 +471,13 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                                        y= center_pos.y + size_shape.y / 2,
                                        force_int=True)
             # Mark center
-            # canvas.create_line(0,center_pos.y,img_size.x,center_pos.y, dash=(1,1), fill='gray')# horizontal
-            # canvas.create_line(center_pos.x,0,center_pos.x,img_size.y, dash=(1,1), fill='gray')# vertical
+            canvas.create_line(0,center_pos.y,img_size.x,center_pos.y, dash=(1,1), fill='gray')# horizontal
+            canvas.create_line(center_pos.x,0,center_pos.x,img_size.y, dash=(1,1), fill='gray')# vertical
 
             # Mark annotation
             canvas.create_rectangle(box_top_left.x,box_top_left.y,
                                     box_bottom_right.x,box_bottom_right.y)
-            
-            canvas.update()
-        # root.mainloop()
-        import time
-        time.sleep(10)
+        canvas.update()
     root.destroy()
 
 if __name__ == '__main__':

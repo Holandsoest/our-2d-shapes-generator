@@ -4,6 +4,7 @@ from progress.bar import ShadyBar
 import threading
 import tkinter
 import random
+import shutil
 import math
 import os
 
@@ -528,44 +529,45 @@ if __name__ == '__main__':
 
     # What folders to generate
     receipts = (
-        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=10000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=10000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=10000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=10000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=10000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=10000,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=10000,   objects_per_image=1,    image_receipt=ImageReceipt.MIX),
 
-        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        FolderReceipt(path,   amount_of_images=200,   objects_per_image=10,   image_receipt=ImageReceipt.MIX),
+        FolderReceipt(path,   amount_of_images=5000,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=5000,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=5000,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=5000,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=5000,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=5000,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=5000,   objects_per_image=2,   image_receipt=ImageReceipt.MIX),
 
-        # FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_STAR),
-        # FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        # FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        # FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_HEART),
-        # FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        # FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        # FolderReceipt(path,   amount_of_images=100,   objects_per_image=50,   image_receipt=ImageReceipt.MIX),
+        FolderReceipt(path,   amount_of_images=2000,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=2000,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=2000,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=2000,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=2000,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=2000,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=2000,   objects_per_image=5,   image_receipt=ImageReceipt.MIX),
 
-        # FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_STAR),
-        # FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        # FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        # FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_HEART),
-        # FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        # FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        # FolderReceipt(path,   amount_of_images=50,   objects_per_image=100,   image_receipt=ImageReceipt.MIX),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=1000,   objects_per_image=10,   image_receipt=ImageReceipt.MIX),
 
-        # FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_STAR),
-        # FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        # FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        # FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_HEART),
-        # FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        # FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        # FolderReceipt(path,   amount_of_images=20,   objects_per_image=500,   image_receipt=ImageReceipt.MIX),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_STAR),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_SQUARE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_HEART),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_CIRCLE),
+        FolderReceipt(path,   amount_of_images=500,   objects_per_image=20,   image_receipt=ImageReceipt.MIX),
     )
     
     # Program
@@ -586,8 +588,6 @@ if __name__ == '__main__':
             create_from_folder_receipt(receipt, img_size, verbose)
     progress_bar.finish()
     if unpack:
-        import shutil
-
         progress_bar = FancyBar('Unpacking', max=total_img)
 
         amount_of_images_iterator = 0

@@ -524,7 +524,7 @@ if __name__ == '__main__':
     path = os.path.join(os.getcwd(), 'files', 'shape_generator', f'{img_size.x}x{img_size.y}')
     use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
     verbose=False # for debugging only
-    unpack=True # reset the img(`image_code`) to be totaly sequencially
+    unpack=True # Generate the output folder where there are no images with duplicate names
 
     # What folders to generate
     receipts = (

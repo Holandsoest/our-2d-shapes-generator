@@ -95,29 +95,30 @@ def move_files(mode:MoveModes, absolute_source:str, absolute_destination:str)->N
         # Update progression
         try: progress_bar.next()
         except: pass
-if __name__ == '__main__':
-    mode = MoveModes.COPY_ZIP
-        
+def sort(dir:str, mode:MoveModes)->None:
     total_files = 0
     total_folders = 0
-    total_files, total_folders = count_items_in_folder(os.getcwd())
+    total_files, total_folders = count_items_in_folder(dir)
     progress_bar = FancyBar(f'{mode.name.lower()}ing files', max=total_files)
+    progress_bar.start()
 
-    if not os.path.exists(os.path.join(os.getcwd(), 'output')): os.makedirs(os.path.join(os.getcwd(), 'output'))
+    if not os.path.exists(os.path.join(dir, 'output')): os.makedirs(os.path.join(dir, 'output'))
 
     file_counter = 0
     move_files(mode, 
-               absolute_source=     os.getcwd(),
-               absolute_destination=os.path.join(os.getcwd(), 'output'))
+               absolute_source=     dir,
+               absolute_destination=os.path.join(dir, 'output'))
     progress_bar.finish()
     if mode == MoveModes.MOVE_ZIP or mode == MoveModes.COPY_ZIP:
         progress_bar = FancyBar(f'Creating .zip', max=1)
+        progress_bar.start()
         shutil.make_archive('output','zip',
-                            os.getcwd(),
-                            os.path.join(os.getcwd(), 'output'),
+                            dir,
+                            os.path.join(dir, 'output'),
                             verbose=True)
+        progress_bar.next()
         progress_bar.finish()
-    if mode == MoveModes.MOVE_ZIP:
-        progress_bar = FancyBar(f'Deleting raw pictures', max=1)
-        os.removedirs(os.path.join(os.getcwd(), 'output'))
-        progress_bar.finish()
+if __name__ == '__main__':
+    sort(dir=os.getcwd() ,mode=MoveModes.COPY_ZIP)
+        
+    

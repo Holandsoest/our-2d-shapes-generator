@@ -587,7 +587,7 @@ if __name__ == '__main__':
     progress_bar.finish()
 
     import sorter
-    sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1))
-    sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1))
+    sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(path, 'output', 'annotations')))
+    sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(path, 'output', 'images')))
     sorter.sort(dir=path,
                 mode=sorter.MoveModes.MOVE_ZIP)

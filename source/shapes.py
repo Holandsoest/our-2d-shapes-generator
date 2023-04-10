@@ -578,6 +578,8 @@ if __name__ == '__main__':
     validation_size = int(train_size/80*20) # 20%
     
     img_sizes = [
+        loc.Size(500,500),
+        loc.Size(1000,1000),
         loc.Size(2000,2000)
     ]
 
@@ -642,3 +644,11 @@ if __name__ == '__main__':
         sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
         sorter.sort(dir=directory,
                     mode=sorter.MoveModes.MOVE)
+        
+    # Merge everything into 1 big thingy
+    directory = output_path
+    sorter.known_solutions.clear()
+    sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(directory, 'annotations')))
+    sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
+    sorter.sort(dir=directory,
+                mode=sorter.MoveModes.MOVE_ZIP)

@@ -90,6 +90,9 @@ def move_files(mode:MoveModes, absolute_source:str, absolute_destination:str, pr
             move_files(mode, 
                        os.path.join(absolute_source, name),
                        absolute_destination, progress_bar)
+            if mode == MoveModes.MOVE or mode == MoveModes.MOVE_ZIP:
+                if not os.path.exists(os.path.join(absolute_source, name)): continue
+                os.removedirs(os.path.join(absolute_source, name))
             continue
         
         # Its a file
@@ -124,15 +127,15 @@ def sort(dir:str, mode:MoveModes)->None:
     progress_bar.finish()
 
     # Zip the files
-    if mode == MoveModes.MOVE_ZIP or mode == MoveModes.COPY_ZIP:
-        progress_bar = FancyBar(f'Creating .zip\t', max=1)
-        progress_bar.start()
-        shutil.make_archive('output','zip',
-                            dir,
-                            os.path.join(dir, 'output'),
-                            verbose=True)
-        progress_bar.next()
-        progress_bar.finish()
+    # if mode == MoveModes.MOVE_ZIP or mode == MoveModes.COPY_ZIP:
+    #     progress_bar = FancyBar(f'Creating .zip\t', max=1)
+    #     progress_bar.start()
+    #     shutil.make_archive('output','zip',
+    #                         dir,
+    #                         dir,
+    #                         verbose=True)
+    #     progress_bar.next()
+    #     progress_bar.finish()
 if __name__ == '__main__':
     dir = os.path.join(os.getcwd(),'files','shape_generator','2000x2000')
     known_solutions.append(KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(dir, 'output', 'annotations')))

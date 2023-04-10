@@ -362,10 +362,11 @@ class ImageReceipt(Enum):
     ONLY_HALF_CIRCLE = 5
     ONLY_CIRCLE = 6
 class FolderReceipt:
-    def __init__(self, path:str, amount_of_images:int, objects_per_image:int, image_receipt:ImageReceipt):
+    def __init__(self, path:str, amount_of_images:int, objects_per_image:int, image_receipt:ImageReceipt, img_size:loc.Size):
         self.amount_of_images=amount_of_images
         self.objects_per_image=objects_per_image
         self.image_receipt=image_receipt
+        self.img_size=img_size
         self.name=f'{amount_of_images}_{objects_per_image}_{image_receipt.name.lower()}'
         self.path=os.path.join(path, self.name)
 class FancyBar(ShadyBar):
@@ -505,11 +506,11 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                                 box_bottom_right.x,box_bottom_right.y)
     root.title = f'{len(annotation_info)} of the {objects} that were requested'
     root.mainloop()
-def create_from_folder_receipt(folder_receipt:FolderReceipt, img_size:loc.Size, verbose=False) -> None:
+def create_from_folder_receipt(folder_receipt:FolderReceipt, verbose=False) -> None:
     for image_code in range(0, folder_receipt.amount_of_images):
         create_random_image(image_code=image_code,
                             objects=folder_receipt.objects_per_image,
-                            img_size=img_size,
+                            img_size=folder_receipt.img_size,
                             path=folder_receipt.path,
                             image_receipt=folder_receipt.image_receipt,
                             verbose=verbose)
@@ -518,76 +519,126 @@ def create_from_folder_receipt(folder_receipt:FolderReceipt, img_size:loc.Size, 
         try: progress_bar.next()
         except NameError: pass
 
-if __name__ == '__main__':
+def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderReceipt]:
+    count = 0
+    receipts = []
 
+    for image_receipt in ImageReceipt:
+        if image_receipt != ImageReceipt.MIX:
+            receipts.append(FolderReceipt(path,
+                                        amount_of_images= int(5*amount/100),
+                                        objects_per_image= 1,
+                                        image_receipt= image_receipt,
+                                        img_size=img_size))
+            count += int(5*amount/100)
+
+        receipts.append(FolderReceipt(path,
+                                      amount_of_images= int(4*amount/100),
+                                      objects_per_image= 2,
+                                      image_receipt= image_receipt,
+                                      img_size=img_size))
+        count += int(4*amount/100)
+        
+        receipts.append(FolderReceipt(path,
+                                      amount_of_images= int(3*amount/100),
+                                      objects_per_image= 5,
+                                      image_receipt= image_receipt,
+                                      img_size=img_size))
+        count += int(3*amount/100)
+        
+        receipts.append(FolderReceipt(path,
+                                      amount_of_images= int(2*amount/100),
+                                      objects_per_image= 10,
+                                      image_receipt= image_receipt,
+                                      img_size=img_size))
+        count += int(2*amount/100)
+        
+        receipts.append(FolderReceipt(path,
+                                      amount_of_images= int(amount/100),
+                                      objects_per_image= 20,
+                                      image_receipt= image_receipt,
+                                      img_size=img_size))
+        count += int(amount/100)
+
+    # remaining
+    receipts.append(FolderReceipt(path,
+                                  amount_of_images= int(amount-count),
+                                  objects_per_image= 20,
+                                  image_receipt= ImageReceipt.MIX,
+                                  img_size=img_size))
+    return receipts
+
+if __name__ == '__main__':
     # Settings
-    img_size = loc.Pos(x=500, y=500)
-    path = os.path.join(os.getcwd(), 'files', 'shape_generator', f'{img_size.x}x{img_size.y}')
     use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
     verbose=False # for debugging only
 
-    # What folders to generate
-    receipts = (
-        FolderReceipt(path,   amount_of_images=250,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=250,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=250,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=250,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=250,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=250,   objects_per_image=1,    image_receipt=ImageReceipt.ONLY_CIRCLE),
-                                               
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=2,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        FolderReceipt(path,   amount_of_images=300,   objects_per_image=2,   image_receipt=ImageReceipt.MIX),
-                                               
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=150,   objects_per_image=5,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        FolderReceipt(path,   amount_of_images=300,   objects_per_image=5,   image_receipt=ImageReceipt.MIX),
-                                               
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=10,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        FolderReceipt(path,   amount_of_images=300,   objects_per_image=10,   image_receipt=ImageReceipt.MIX),
-                                               
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_STAR),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_SQUARE),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_SYMMETRIC_TRIANGLE),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_HEART),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_HALF_CIRCLE),
-        FolderReceipt(path,   amount_of_images=50,   objects_per_image=20,   image_receipt=ImageReceipt.ONLY_CIRCLE),
-        FolderReceipt(path,   amount_of_images=300,   objects_per_image=20,   image_receipt=ImageReceipt.MIX),
-    )
+    # Batch settings
+    train_size = 25000
+    validation_size = int(train_size/80*20) # 20%
     
+    img_sizes = [
+        loc.Size(2000,2000)
+    ]
+
+    output_path = os.path.join(os.getcwd(), 'files', 'shape_generator')
+
     # Program
-    total_img = 0
-    for receipt in receipts: total_img += receipt.amount_of_images
-    progress_bar = FancyBar(f'Generating [{img_size.x}x{img_size.y}] images', max=total_img)
-
-    if use_multithreading:
-        threads = []
-        for receipt in receipts:
-            thread = threading.Thread( target=create_from_folder_receipt, args=(receipt, img_size, verbose,))
-            thread.start()
-            threads.append(thread)
-        for thread in threads:
-            thread.join()
-    else:
-        for receipt in receipts:
-            create_from_folder_receipt(receipt, img_size, verbose)
-    progress_bar.finish()
-
     import sorter
-    sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(path, 'output', 'annotations')))
-    sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(path, 'output', 'images')))
-    sorter.sort(dir=path,
-                mode=sorter.MoveModes.MOVE_ZIP)
+    for img_size in img_sizes:
+
+        # Train 80%
+        directory = os.path.join(output_path, f'{img_size.x}x{img_size.y}', 'train')
+        receipts = get_receipts_of_batch(amount=    train_size,
+                                         path=      directory,
+                                         img_size=  img_size)
+        total_img = train_size
+        progress_bar = FancyBar(f'Generating [{img_size.x}x{img_size.y}] training\t', max=total_img)
+
+        # Progress
+        if use_multithreading:
+            threads = []
+            for receipt in receipts:
+                thread = threading.Thread( target=create_from_folder_receipt, args=(receipt, verbose,))
+                thread.start()
+                threads.append(thread)
+            for thread in threads:
+                thread.join()
+        else:
+            for receipt in receipts:
+                create_from_folder_receipt(receipt, verbose)
+        progress_bar.finish()
+
+        sorter.known_solutions.clear()
+        sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(directory, 'annotations')))
+        sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
+        sorter.sort(dir=directory,
+                    mode=sorter.MoveModes.MOVE)
+
+        # Validation 20%
+        directory = os.path.join(output_path, f'{img_size.x}x{img_size.y}', 'validation')
+        receipts = get_receipts_of_batch(amount=    validation_size,
+                                         path=      directory,
+                                         img_size=  img_size)
+        total_img = validation_size
+        progress_bar = FancyBar(f'Generating [{img_size.x}x{img_size.y}] validation\t', max=total_img)
+
+        # Progress
+        if use_multithreading:
+            threads = []
+            for receipt in receipts:
+                thread = threading.Thread( target=create_from_folder_receipt, args=(receipt, verbose,))
+                thread.start()
+                threads.append(thread)
+            for thread in threads:
+                thread.join()
+        else:
+            for receipt in receipts:
+                create_from_folder_receipt(receipt, verbose)
+        progress_bar.finish()
+
+        sorter.known_solutions.clear()
+        sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(directory, 'annotations')))
+        sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
+        sorter.sort(dir=directory,
+                    mode=sorter.MoveModes.MOVE)

@@ -106,6 +106,7 @@ def move_files(mode:MoveModes, absolute_source:str, absolute_destination:str, pr
         try: progress_bar.next()
         except: pass
 def sort(dir:str, mode:MoveModes)->None:
+
     # Update progress bar
     total_files = 0
     total_folders = 0
@@ -133,7 +134,7 @@ def sort(dir:str, mode:MoveModes)->None:
         progress_bar.next()
         progress_bar.finish()
 if __name__ == '__main__':
-    dir = os.path.join(os.getcwd(),'files','shape_generator','500x500')
+    dir = os.path.join(os.getcwd(),'files','shape_generator','2000x2000')
     known_solutions.append(KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(dir, 'output', 'annotations')))
     known_solutions.append(KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(dir, 'output', 'images')))
     sort(dir ,mode=MoveModes.COPY_ZIP)

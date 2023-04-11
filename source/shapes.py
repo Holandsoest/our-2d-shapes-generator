@@ -474,7 +474,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
     # Summit the data
     save_img(tkinter_canvas=canvas,
             path_filename=os.path.join(path, 'images', f'img ({image_code})'),
-            as_jpg=True)
+            as_png=True)
     save_annotation(annotation_info,
                     path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
     if not verbose:
@@ -613,7 +613,7 @@ if __name__ == '__main__':
 
         sorter.known_solutions.clear()
         sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(directory, 'annotations')))
-        sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
+        sorter.known_solutions.append(sorter.KnownSolution(['img','.png'],'img #.png', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
         sorter.sort(dir=directory,
                     mode=sorter.MoveModes.MOVE)
 
@@ -641,14 +641,14 @@ if __name__ == '__main__':
 
         sorter.known_solutions.clear()
         sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(directory, 'annotations')))
-        sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
+        sorter.known_solutions.append(sorter.KnownSolution(['img','.png'],'img #.png', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
         sorter.sort(dir=directory,
                     mode=sorter.MoveModes.MOVE)
         
     # Merge everything into 1 big thingy
-    directory = output_path
-    sorter.known_solutions.clear()
-    sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(directory, 'annotations')))
-    sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
-    sorter.sort(dir=directory,
-                mode=sorter.MoveModes.MOVE_ZIP)
+    # directory = output_path
+    # sorter.known_solutions.clear()
+    # sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(directory, 'annotations')))
+    # sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
+    # sorter.sort(dir=directory,
+    #             mode=sorter.MoveModes.MOVE_ZIP)

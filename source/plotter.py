@@ -157,14 +157,15 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
     
     # Draw it on the canvas and return the shape
     shape.draw_shadow(tkinter_canvas=canvas,
-                      depth_shadow_px=10,
-                      sun_rotation_rad=2.0)
+                      depth_shadow_px=50,
+                      sun_rotation_rad=4.0)
     
     shape_color = get_random_tkinter_color_(avoid_color='white')
     shape.draw_shape(tkinter_canvas=canvas,
                      outline_color=shape_color,
                      fill_color=shape_color,
-                     width_outline=1)
+                     width_outline=1,
+                     location_offset=loc.Pos())
     return shape
 def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str, image_receipt:ImageReceipt | None, verbose=False) -> None:
     # Setup environment

@@ -72,12 +72,15 @@ def save_annotation(list_of_annotations:list, path_filename:str) -> None:
         file.flush()
         file.close()
 
-def get_random_tkinter_color_(avoid_color) -> str:
-    colors = ["black", "red", "green", "blue", "cyan", "yellow", "magenta"]
-    # if type(avoid_color) == type(str): TODO
-    #     try:    colors.remove(str.lower(avoid_color))
-    #     except: print(f'Told me to avoid color={avoid_color} in `get_random_tkinter_color_`, but that color does not exists')
-    # elif type(avoid_color) == type(int): colors.remove(colors[avoid_color])
+def get_random_tkinter_color_(avoid_colors:list[str]|str|None) -> str:
+    colors = ["black", "red", "green", "blue", "cyan", "yellow", "magenta", "white"]
+    if isinstance(avoid_colors, list):
+        for avoid_color in avoid_colors:
+            try:    colors.remove(str.lower(avoid_color))
+            except: pass
+    elif isinstance(avoid_colors, str):
+        try:    colors.remove(str.lower(avoid_colors))
+        except: pass
     return colors[ random.randint(0,  len(colors) - 1  ) ]
 
 class ImageReceipt(Enum):
@@ -193,10 +196,14 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                           depth_shadow_px,
                           sun_rotation_rad)
     for shape in list_of_shapes:
-        shape_color = get_random_tkinter_color_(avoid_color='white')
+        fill_color = get_random_tkinter_color_(avoid_colors='white')
+        avoid_colors = ["red", "green", "blue", "cyan", "yellow", "magenta"]
+        try:    avoid_colors.remove(fill_color)
+        except: pass
+        outline_color = get_random_tkinter_color_(avoid_colors)
         shape.draw_shape(tkinter_canvas=canvas,
-                         outline_color=shape_color,
-                         fill_color=shape_color,
+                         outline_color=outline_color,
+                         fill_color=fill_color,
                          width_outline=1,
                          location_offset=loc.Pos())
     # Summit the data

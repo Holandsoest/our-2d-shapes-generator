@@ -91,18 +91,22 @@ def angle_mirror_(rad_angle:float, mirror_vertical=False)->float:
 
 # Shapes
 class Shape:
-    def get_polygon_coordinates_(self) -> list:
+    def get_polygon_coordinates_(self, location_offset:loc.Pos|None) -> list:
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
+        if (isinstance(location_offset, None)): location_offset = loc.Pos()
+
         polygon_coordinates = []
         for node in self.outline_coordinates:
-            polygon_coordinates.append(  int(round(  node.x,  0  ))  )
-            polygon_coordinates.append(  int(round(  node.y,  0  ))  )
+            polygon_coordinates.append(  int(round(  node.x + location_offset.x,  0  ))  )
+            polygon_coordinates.append(  int(round(  node.y + location_offset.y,  0  ))  )
         return polygon_coordinates
     
-    def draw_shape(self, tkinter_canvas:tkinter.Canvas, outline_color:str, fill_color:str, width_outline:int) -> int:
+    def draw_shape(self, tkinter_canvas:tkinter.Canvas, outline_color:str, fill_color:str, width_outline:int, location_offset:loc.Pos|None) -> int:
         """Returns an `object_ID` of the shape drawn on the `tkinter_canvas`"""
         if (width_outline < 0): raise RuntimeWarning('A `width_outline` cannot be negative.')
-        return tkinter_canvas.create_polygon(self.get_polygon_coordinates_(),
+        if (isinstance(location_offset, None)): location_offset = loc.Pos()
+
+        return tkinter_canvas.create_polygon(self.get_polygon_coordinates_(location_offset),
                                              outline=outline_color, width=width_outline,
                                              smooth=1 if isinstance(self, Heart) or isinstance(self, HalfCircle) else 0,
                                              fill=fill_color)
@@ -297,9 +301,11 @@ class Circle(Shape):
 
         self.annotation=Annotation(0, image_size=img_size, coordinates=self.outline_coordinates)
 
-    def draw_shape(self, tkinter_canvas:tkinter.Canvas, outline_color:str, fill_color:str, width_outline:int) -> int:
+    def draw_shape(self, tkinter_canvas:tkinter.Canvas, outline_color:str, fill_color:str, width_outline:int, location_offset:loc.Pos|None) -> int:
         """Returns an `object_ID` of the shape drawn on the `tkinter_canvas`"""
         if (width_outline < 0): raise RuntimeWarning('A `width_outline` cannot be negative.')
+        if (isinstance(location_offset, None)): location_offset = loc.Pos()
+
         return tkinter_canvas.create_oval(self.annotation.box.pos.x, self.annotation.box.pos.y, self.annotation.box.pos.x + self.annotation.box.size.x, self.annotation.box.pos.y + self.annotation.box.size.y,
                                           outline=outline_color,
                                           width=1,

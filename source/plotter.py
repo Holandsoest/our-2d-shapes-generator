@@ -186,10 +186,12 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
         all_outline_coordinates.append(shape.outline_coordinates)
     
     # Draw the shapes
+    depth_shadow_px = random.randint(0,50)
+    sun_rotation_rad = math.pi * 2 * random.random()
     for shape in list_of_shapes:
-        shape.draw_shadow(tkinter_canvas=canvas,
-                          depth_shadow_px=100,
-                          sun_rotation_rad=4.0)
+        shape.draw_shadow(canvas,
+                          depth_shadow_px,
+                          sun_rotation_rad)
     for shape in list_of_shapes:
         shape_color = get_random_tkinter_color_(avoid_color='white')
         shape.draw_shape(tkinter_canvas=canvas,

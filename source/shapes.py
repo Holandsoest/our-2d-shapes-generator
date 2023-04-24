@@ -109,22 +109,34 @@ class Shape:
                                              smooth=1 if isinstance(self, Heart) or isinstance(self, HalfCircle) else 0,
                                              fill=fill_color)
     
-    def draw_shadow(self, tkinter_canvas:tkinter.Canvas, depth_shadow_px:int, sun_rotation_rad:float) -> list[int]|None:
+    def draw_shadow(self, tkinter_canvas:tkinter.Canvas, depth_shadow_px:int, sun_rotation_rad:float, shadows_float=False) -> list[int]|None:
         """Returns a list of `object_ID`'s of the shapes drawn on the `tkinter_canvas`, unless the `depth_shadow_px` is zero then it returns a `None`"""
         if (depth_shadow_px < 0): raise RuntimeWarning('A `depth_shadow_px` cannot be negative.')
         if (depth_shadow_px == 0): return None
         sun_rotation_rad %= 2 * math.pi
 
-        self.draw_shape(tkinter_canvas,
-                        outline_color='gray',
-                        fill_color='gray',
-                        width_outline=1,
-                        location_offset=calculate_arm_point_(start_pos=self.center_pos,
-                                                             length_trace=depth_shadow_px,
-                                                             rotation_rad=sun_rotation_rad) - self.center_pos)
-        
-        pass
+        output_ids = []
 
+        # End location
+        output_ids.append(self.draw_shape(tkinter_canvas,
+                                          outline_color='gray',
+                                          fill_color='gray',
+                                          width_outline=1,
+                                          location_offset=calculate_arm_point_(start_pos=self.center_pos,
+                                                                               length_trace=depth_shadow_px,
+                                                                               rotation_rad=sun_rotation_rad) - self.center_pos))
+        if shadows_float: return output_ids
+        if depth_shadow_px - 1 <= 0: return output_ids
+        for i in range(1,depth_shadow_px):
+            output_ids.append(self.draw_shape(tkinter_canvas,
+                                              outline_color='gray',
+                                              fill_color='gray',
+                                              width_outline=1,
+                                              location_offset=calculate_arm_point_(start_pos=self.center_pos,
+                                                                                   length_trace=i,
+                                                                                   rotation_rad=sun_rotation_rad) - self.center_pos))
+        return output_ids
+    
 class Star(Shape):
     def __init__(self, img_size:loc.Size, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0, depth_percentage=50):
         rotation_rad %= math.pi * 2 / 5 # Shape repeats every 72 degrees

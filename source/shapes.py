@@ -310,7 +310,10 @@ class Circle(Shape):
         """Returns an `object_ID` of the shape drawn on the `tkinter_canvas`"""
         if (width_outline < 0): raise RuntimeWarning('A `width_outline` cannot be negative.')
 
-        return tkinter_canvas.create_oval(self.annotation.box.pos.x, self.annotation.box.pos.y, self.annotation.box.pos.x + self.annotation.box.size.x, self.annotation.box.pos.y + self.annotation.box.size.y,
+        return tkinter_canvas.create_oval(self.annotation.box.pos.x + location_offset.x,
+                                          self.annotation.box.pos.y + location_offset.y,
+                                          self.annotation.box.pos.x + self.annotation.box.size.x + location_offset.x,
+                                          self.annotation.box.pos.y + self.annotation.box.size.y + location_offset.y,
                                           outline=outline_color,
                                           width=1,
                                           fill=fill_color)

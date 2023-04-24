@@ -214,19 +214,16 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
 
     for annotation in annotation_info:
         center_pos = loc.Pos(x= annotation.x * img_size.x,
-                                y= annotation.y * img_size.y)
+                             y= annotation.y * img_size.y)
         size_shape = loc.Pos(x= annotation.width * img_size.x,
-                                y= annotation.height * img_size.y)
+                             y= annotation.height * img_size.y)
         box_top_left = loc.Pos(x= center_pos.x - size_shape.x / 2,
-                                y= center_pos.y - size_shape.y / 2,
-                                force_int=True)
+                               y= center_pos.y - size_shape.y / 2,
+                               force_int=True)
         box_bottom_right = loc.Pos(x= center_pos.x + size_shape.x / 2,
-                                    y= center_pos.y + size_shape.y / 2,
-                                    force_int=True)
-        # Mark center
-        # canvas.create_line(0,center_pos.y,img_size.x,center_pos.y, dash=(1,1), fill='gray')# horizontal
-        # canvas.create_line(center_pos.x,0,center_pos.x,img_size.y, dash=(1,1), fill='gray')# vertical
-
+                                   y= center_pos.y + size_shape.y / 2,
+                                   force_int=True)
+        
         # Mark annotation
         canvas.create_rectangle(box_top_left.x,box_top_left.y,
                                 box_bottom_right.x,box_bottom_right.y)
@@ -296,16 +293,16 @@ def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderR
 
 if __name__ == '__main__':
     # Settings
-    use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
-    verbose=False # for debugging only
+    use_multithreading=False # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
+    verbose=True # for debugging only
 
     # Batch settings
-    train_size = 25000
-    validation_size = int(train_size/80*20) # 20%
+    train_size = 1#25000
+    validation_size = 1#int(train_size/80*20) # 20%
     
     img_sizes = [
-        loc.Size(500,500),
-        loc.Size(1000,1000),
+        # loc.Size(500,500),
+        # loc.Size(1000,1000),
         loc.Size(2000,2000)
     ]
 

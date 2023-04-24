@@ -101,7 +101,7 @@ class FancyBar(ShadyBar):
     suffix = '[%(index)d/%(max)d]  -  %(percent).1f%%  -  %(eta_td)s remaining  -  %(elapsed_td)s elapsed'
     # suffix = '[%(index)d/%(max)d]\t%(percent)d%\t[%(eta_td)s remaining]\t[%(elapsed_td)s remaining]'
     
-def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_areas:list[shapes.Annotation], draw_shape_on_canvas:bool, star=False, square=False, symmetric_triangle=False, heart=False, half_circle=False, circle=False):#TODO
+def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_areas:list[shapes.Annotation], star=False, square=False, symmetric_triangle=False, heart=False, half_circle=False, circle=False) -> shapes.Heart|shapes.Circle|shapes.HalfCircle|shapes.Square|shapes.Star|shapes.SymmetricTriangle:
     if not ( star or square or symmetric_triangle or heart or half_circle or circle ):
         raise SyntaxError('No shape selected to create.')
 
@@ -155,22 +155,12 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
     if not valid_area:
         raise RuntimeError('Tried my best to get a shape, but no dice.')
     
-    # Draw it on the canvas and return the shape
-    shape.draw_shadow(tkinter_canvas=canvas,
-                      depth_shadow_px=50,
-                      sun_rotation_rad=4.0)
-    
-    shape_color = get_random_tkinter_color_(avoid_color='white')
-    shape.draw_shape(tkinter_canvas=canvas,
-                     outline_color=shape_color,
-                     fill_color=shape_color,
-                     width_outline=1,
-                     location_offset=loc.Pos())
     return shape
 def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str, image_receipt:ImageReceipt | None, verbose=False) -> None:
     # Setup environment
     window = tkinter.Tk()
     canvas = tkinter.Canvas(window, bg='white', height=img_size.y, width=img_size.x, takefocus=0)
+    list_of_shapes = []
     annotation_info = []
     all_outline_coordinates = []
 
@@ -180,7 +170,6 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
             shape = create_random_shape(canvas=canvas,
                                         img_size=img_size,
                                         forbidden_areas=annotation_info,
-                                        draw_shape_on_canvas=True,
 
                                         star=               image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_STAR,
                                         square=             image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_SQUARE,
@@ -188,14 +177,26 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                                         heart=              image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_HEART,
                                         half_circle=        image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_HALF_CIRCLE,
                                         circle=             image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_CIRCLE
-
                                         )
         except: continue
         
         # Add the annotation to the list
+        list_of_shapes.append(shape)
         annotation_info.append(shape.annotation)
         all_outline_coordinates.append(shape.outline_coordinates)
     
+    # Draw the shapes
+    for shape in list_of_shapes:
+        shape.draw_shadow(tkinter_canvas=canvas,
+                          depth_shadow_px=100,
+                          sun_rotation_rad=4.0)
+    for shape in list_of_shapes:
+        shape_color = get_random_tkinter_color_(avoid_color='white')
+        shape.draw_shape(tkinter_canvas=canvas,
+                         outline_color=shape_color,
+                         fill_color=shape_color,
+                         width_outline=1,
+                         location_offset=loc.Pos())
     # Summit the data
     save_img(tkinter_canvas=canvas,
             path_filename=os.path.join(path, 'images', f'img ({image_code})'),

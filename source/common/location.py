@@ -19,6 +19,12 @@ class Pos:
         if (self.x != other.x): return False
         if (self.y != other.y): return False
         return True
+    def __add__(self, other) -> int|float:
+        return Pos(x= self.x + other.x,
+                   y= self.y + other.y)
+    def __sub__(self, other) -> int|float:
+        return Pos(x= self.x - other.x,
+                   y= self.y - other.y)
     
     # Basic math functions
     def min(self) -> int | float:

@@ -1,6 +1,8 @@
 import common.location as loc
-import math
 
+import tkinter
+
+import math
 
 object_names_array=["circle", "half circle", "square", "heart", "star", "triangle"]
 class Annotation:
@@ -89,13 +91,31 @@ def angle_mirror_(rad_angle:float, mirror_vertical=False)->float:
 
 # Shapes
 class Shape:
-    def get_polygon_coordinates(self) -> list:
+    def get_polygon_coordinates_(self) -> list:
         """Returns a list of coordinates that can be used by `tkinter` to draw a `polygon` on a `canvas`"""
         polygon_coordinates = []
         for node in self.outline_coordinates:
             polygon_coordinates.append(  int(round(  node.x,  0  ))  )
             polygon_coordinates.append(  int(round(  node.y,  0  ))  )
         return polygon_coordinates
+    
+    def draw_shape(self, tkinter_canvas:tkinter.Canvas, outline_color:str, fill_color:str, width_outline:int) -> int:
+        """Returns an `object_ID` of the shape drawn on the `tkinter_canvas`"""
+        if (width_outline < 0): raise RuntimeWarning('A `width_outline` cannot be negative.')
+        return tkinter_canvas.create_polygon(self.get_polygon_coordinates_(),
+                                             outline=outline_color, width=width_outline,
+                                             smooth=1 if isinstance(self, Heart) or isinstance(self, HalfCircle) else 0,
+                                             fill=fill_color)
+    
+    def draw_shadow(self, tkinter_canvas:tkinter.Canvas, depth_shadow_px:int, sun_rotation_rad:float) -> list[int]|None:
+        """Returns a list of `object_ID`'s of the shapes drawn on the `tkinter_canvas`, unless the `depth_shadow_px` is zero then it returns a `None`"""
+        if (depth_shadow_px < 0): raise RuntimeWarning('A `depth_shadow_px` cannot be negative.')
+        if (depth_shadow_px == 0): return None
+        sun_rotation_rad %= 2 * math.pi
+
+        
+        pass
+
 class Star(Shape):
     def __init__(self, img_size:loc.Size, center_pos:loc.Pos, size_in_pixels=10, rotation_rad=0.0, depth_percentage=50):
         rotation_rad %= math.pi * 2 / 5 # Shape repeats every 72 degrees
@@ -276,3 +296,11 @@ class Circle(Shape):
             self.outline_coordinates.append(calculate_arm_point_(center_pos, arm_length, arm_rotation))
 
         self.annotation=Annotation(0, image_size=img_size, coordinates=self.outline_coordinates)
+
+    def draw_shape(self, tkinter_canvas:tkinter.Canvas, outline_color:str, fill_color:str, width_outline:int) -> int:
+        """Returns an `object_ID` of the shape drawn on the `tkinter_canvas`"""
+        if (width_outline < 0): raise RuntimeWarning('A `width_outline` cannot be negative.')
+        return tkinter_canvas.create_oval(self.annotation.box.pos.x, self.annotation.box.pos.y, self.annotation.box.pos.x + self.annotation.box.size.x, self.annotation.box.pos.y + self.annotation.box.size.y,
+                                          outline=outline_color,
+                                          width=1,
+                                          fill=fill_color)

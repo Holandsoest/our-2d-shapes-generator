@@ -1,3 +1,5 @@
+"""## BUG:
+- The output filesize is not correct. The ques right now is that this is because `.EPS` does some optimization upon first rastirisation before it enters `Pillow`. Very sad. Much cry :'("""
 import common.location as loc
 import shapes
 from enum import Enum # Keep enums UPPER_CASE according to https://docs.python.org/3/howto/enum.html  
@@ -6,6 +8,7 @@ import threading
 import tkinter
 import random
 import shutil
+import time
 import math
 import os
 
@@ -159,10 +162,10 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
         raise RuntimeError('Tried my best to get a shape, but no dice.')
     
     return shape
-def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str, image_receipt:ImageReceipt | None, verbose=False) -> None:
+def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:str, image_receipt:ImageReceipt | None, verbose=False) -> None:
     # Setup environment
     window = tkinter.Tk()
-    canvas = tkinter.Canvas(window, bg='white', height=img_size.y, width=img_size.x, takefocus=0)
+    canvas = tkinter.Canvas(window, bg='white', height=image_size.y, width=image_size.x, takefocus=0)
     list_of_shapes = []
     annotation_info = []
     all_outline_coordinates = []
@@ -171,7 +174,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
     for i in range(0, objects):
         try:
             shape = create_random_shape(canvas=canvas,
-                                        img_size=img_size,
+                                        img_size=image_size,
                                         forbidden_areas=annotation_info,
 
                                         star=               image_receipt == ImageReceipt.MIX or image_receipt == ImageReceipt.ONLY_STAR,
@@ -189,7 +192,7 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
         all_outline_coordinates.append(shape.outline_coordinates)
     
     # Draw the shapes
-    depth_shadow_px = random.randint(0,50)
+    depth_shadow_px = random.randint(0, int(image_size.min()/50))
     sun_rotation_rad = math.pi * 2 * random.random()
     for shape in list_of_shapes:
         shape.draw_shadow(canvas,
@@ -208,8 +211,8 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
                          location_offset=loc.Pos())
     # Summit the data
     save_img(tkinter_canvas=canvas,
-            path_filename=os.path.join(path, 'images', f'img ({image_code})'),
-            as_png=True)
+             path_filename=os.path.join(path, 'images', f'img ({image_code})'),
+             as_png=True)
     save_annotation(annotation_info,
                     path_filename=os.path.join(path, 'annotations', f'img ({image_code})'))
     if not verbose:
@@ -222,10 +225,10 @@ def create_random_image(image_code:int, objects:int, img_size:loc.Pos, path:str,
             canvas.create_rectangle(coordinate.x-1,coordinate.y-1,coordinate.x+1,coordinate.y+1,outline='red',fill='blue',width=1) # draw dot on each coordinate
 
     for annotation in annotation_info:
-        center_pos = loc.Pos(x= annotation.x * img_size.x,
-                             y= annotation.y * img_size.y)
-        size_shape = loc.Pos(x= annotation.width * img_size.x,
-                             y= annotation.height * img_size.y)
+        center_pos = loc.Pos(x= annotation.x * image_size.x,
+                             y= annotation.y * image_size.y)
+        size_shape = loc.Pos(x= annotation.width * image_size.x,
+                             y= annotation.height * image_size.y)
         box_top_left = loc.Pos(x= center_pos.x - size_shape.x / 2,
                                y= center_pos.y - size_shape.y / 2,
                                force_int=True)
@@ -242,7 +245,7 @@ def create_from_folder_receipt(folder_receipt:FolderReceipt, verbose=False) -> N
     for image_code in range(0, folder_receipt.amount_of_images):
         create_random_image(image_code=image_code,
                             objects=folder_receipt.objects_per_image,
-                            img_size=folder_receipt.img_size,
+                            image_size=folder_receipt.img_size,
                             path=folder_receipt.path,
                             image_receipt=folder_receipt.image_receipt,
                             verbose=verbose)
@@ -250,7 +253,6 @@ def create_from_folder_receipt(folder_receipt:FolderReceipt, verbose=False) -> N
         # update `progress_bar` but there might not be one...
         try: progress_bar.next()
         except NameError: pass
-
 def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderReceipt]:
     count = 0
     receipts = []
@@ -302,12 +304,12 @@ def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderR
 
 if __name__ == '__main__':
     # Settings
-    use_multithreading=False # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
-    verbose=True # for debugging only
+    use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
+    verbose=False # for debugging only
 
     # Batch settings
-    train_size = 1#25000
-    validation_size = 1#int(train_size/80*20) # 20%
+    train_size = 50000
+    validation_size = int(train_size/80*20) # 20%
     
     img_sizes = [
         # loc.Size(500,500),
@@ -377,10 +379,17 @@ if __name__ == '__main__':
         sorter.sort(dir=directory,
                     mode=sorter.MoveModes.MOVE)
         
-    # Merge everything into 1 big thingy
-    # directory = output_path
-    # sorter.known_solutions.clear()
-    # sorter.known_solutions.append(sorter.KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(directory, 'annotations')))
-    # sorter.known_solutions.append(sorter.KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(directory, 'images')))
-    # sorter.sort(dir=directory,
-    #             mode=sorter.MoveModes.MOVE_ZIP)
+        # Create `.zip`
+        directory = os.path.join(output_path,f'{img_size.x}x{img_size.y}')
+        filename = f'{time.localtime().tm_year}-{str(time.localtime().tm_mon).zfill(2)}-{str(time.localtime().tm_mday).zfill(2)}_{img_size.x}x{img_size.y}_T{train_size}+V{validation_size}_{str(time.localtime().tm_hour).zfill(2)}{str(time.localtime().tm_min).zfill(2)}{str(time.localtime().tm_sec).zfill(2)}'
+        progress_bar = FancyBar(f'Creating {filename}.zip\t', max=1)
+        progress_bar.start()
+        shutil.make_archive(filename,'zip', directory)
+        progress_bar.next()
+        progress_bar.finish()
+
+        # Remove original folder
+        progress_bar = FancyBar(f'Removing originals\t', max=sorter.count_items_in_folder(directory)[0])
+        progress_bar.start()
+        sorter.remove_files(directory, progress_bar)
+        progress_bar.finish()

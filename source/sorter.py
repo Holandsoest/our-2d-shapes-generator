@@ -9,8 +9,6 @@ import os
 class MoveModes(Enum):
     MOVE = 0
     COPY = 1
-    MOVE_ZIP = 2
-    COPY_ZIP = 3
 class KnownSolution:
     def __init__ (self, find_all:list, filename_output:str, start_iterator_at:int, absolute_directory:str)->None:
         """- `find_all` is a list of strings that all must be found in order to determine that it is the correct file
@@ -71,6 +69,7 @@ def get_new_filename(filename:str, default_dst:str)->str:
 
     return get_new_filename(filename, default_dst)
 def count_items_in_folder(absolute_path:str)->tuple[int,int]:
+    """returns a tuple of `(files.count,folders.count)`"""
     files = 0
     folders = 0
     for name in os.listdir(absolute_path):
@@ -90,7 +89,7 @@ def move_files(mode:MoveModes, absolute_source:str, absolute_destination:str, pr
             move_files(mode, 
                        os.path.join(absolute_source, name),
                        absolute_destination, progress_bar)
-            if mode == MoveModes.MOVE or mode == MoveModes.MOVE_ZIP:
+            if mode == MoveModes.MOVE:
                 if not os.path.exists(os.path.join(absolute_source, name)): continue
                 os.removedirs(os.path.join(absolute_source, name))
             continue
@@ -100,7 +99,7 @@ def move_files(mode:MoveModes, absolute_source:str, absolute_destination:str, pr
         dst = os.path.join(get_new_filename(name, absolute_destination))
         dst_folder = os.path.dirname(dst)
         if not os.path.exists(dst_folder): os.makedirs(dst_folder)
-        if mode == MoveModes.MOVE or mode == MoveModes.MOVE_ZIP:
+        if mode == MoveModes.MOVE:
             os.rename(src,dst)
         else:
             shutil.copy2(src,dst)
@@ -114,7 +113,7 @@ def sort(dir:str, mode:MoveModes)->None:
     total_files = 0
     total_folders = 0
     total_files, total_folders = count_items_in_folder(dir)
-    if mode == MoveModes.MOVE_ZIP or mode == MoveModes.MOVE: title = f'Moving files\t'
+    if mode == MoveModes.MOVE: title = f'Moving files\t'
     else: title = f'Copying files\t'
     progress_bar = FancyBar(title, max=total_files)
     progress_bar.start()
@@ -125,21 +124,16 @@ def sort(dir:str, mode:MoveModes)->None:
                absolute_destination=os.path.join(dir, 'output'),
                progress_bar=progress_bar)
     progress_bar.finish()
-
-    # Zip the files
-    # if mode == MoveModes.MOVE_ZIP or mode == MoveModes.COPY_ZIP:
-    #     progress_bar = FancyBar(f'Creating .zip\t', max=1)
-    #     progress_bar.start()
-    #     shutil.make_archive('output','zip',
-    #                         dir,
-    #                         dir,
-    #                         verbose=True)
-    #     progress_bar.next()
-    #     progress_bar.finish()
-if __name__ == '__main__':
-    dir = os.path.join(os.getcwd(),'files','shape_generator','2000x2000')
-    known_solutions.append(KnownSolution(['img','.txt'],'img #.txt', start_iterator_at=1, absolute_directory=os.path.join(dir, 'output', 'annotations')))
-    known_solutions.append(KnownSolution(['img','.jpg'],'img #.jpg', start_iterator_at=1, absolute_directory=os.path.join(dir, 'output', 'images')))
-    sort(dir ,mode=MoveModes.COPY_ZIP)
+def remove_files(absolute_path:str, progress_bar:FancyBar|None):
+    for name in os.listdir(absolute_path):
+        if os.path.isdir(os.path.join(absolute_path, name)): # Its a folder
+            remove_files(os.path.join(absolute_path, name), progress_bar)
+            if os.path.exists(os.path.join(absolute_path, name)): os.removedirs(os.path.join(absolute_path, name))
+            continue
         
-    
+        # Its a file
+        os.remove(os.path.join(absolute_path, name))
+
+        # Update progression
+        try: progress_bar.next()
+        except: pass

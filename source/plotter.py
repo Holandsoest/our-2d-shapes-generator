@@ -25,11 +25,6 @@ def save_img(tkinter_canvas:tkinter.Canvas, path_filename:str, as_png=False, as_
     if not ( as_png or as_jpg or as_gif or as_bmp or as_eps ):
         print('WARNING: Could not save, as no file format was given.')
         return
-    
-
-    tkinter_canvas.pack()
-    tkinter_canvas.update()
-
 
     # Create that directory if it does not exists yet
     parent_path = os.path.split(path_filename)[0] # 1 directory up
@@ -166,10 +161,10 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
 def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:str, image_receipt:ImageReceipt | None, background_image=None, verbose=False) -> None:
     # Setup environment
     window = tkinter.Tk()
-    canvas = tkinter.Canvas(window, bg='white', height=image_size.y, width=image_size.x, takefocus=False, state=tkinter.DISABLED)
+    canvas = tkinter.Canvas(window, bg='white', height=image_size.y, width=image_size.x, takefocus=False, borderwidth=1)
     if isinstance(background_image, Image.Image):
-        tk_background = ImageTk.PhotoImage(background_image)
-        canvas.create_image(0,0, anchor=tkinter.NW, image=tk_background)
+        tk_img=ImageTk.PhotoImage(background_image)
+        canvas.create_image(2,2, anchor=tkinter.NW, image=tk_img)
     list_of_shapes = []
     annotation_info = []
     all_outline_coordinates = []
@@ -214,6 +209,9 @@ def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:s
                          width_outline=1,
                          location_offset=loc.Pos())
     # Summit the data
+    canvas.pack()
+    canvas.update()
+    if not verbose: window.withdraw()
     save_img(tkinter_canvas=canvas,
              path_filename=os.path.join(path, 'images', f'img ({image_code})'),
              as_png=True)
@@ -222,6 +220,7 @@ def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:s
     if not verbose:
         window.destroy()
         return
+    window.deiconify()
     
     # Mark all polygons
     for outline_coordinates in all_outline_coordinates:

@@ -4,6 +4,7 @@ import common.location as loc
 import shapes
 from enum import Enum # Keep enums UPPER_CASE according to https://docs.python.org/3/howto/enum.html  
 from progress.bar import ShadyBar
+from PIL import Image, ImageTk
 import threading
 import tkinter
 import random
@@ -162,10 +163,13 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
         raise RuntimeError('Tried my best to get a shape, but no dice.')
     
     return shape
-def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:str, image_receipt:ImageReceipt | None, verbose=False) -> None:
+def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:str, image_receipt:ImageReceipt | None, background_image=None, verbose=False) -> None:
     # Setup environment
     window = tkinter.Tk()
     canvas = tkinter.Canvas(window, bg='white', height=image_size.y, width=image_size.x, takefocus=False, state=tkinter.DISABLED)
+    if isinstance(background_image, Image.Image):
+        tk_background = ImageTk.PhotoImage(background_image)
+        canvas.create_image(0,0, anchor=tkinter.NW, image=tk_background)
     list_of_shapes = []
     annotation_info = []
     all_outline_coordinates = []
@@ -242,13 +246,21 @@ def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:s
     window.title = f'{len(annotation_info)} of the {objects} that were requested'
     window.mainloop()
 def create_from_folder_receipt(folder_receipt:FolderReceipt, verbose=False) -> None:
+    # Prepare the background of the image, what is for each the same
+    background_image_location = os.path.join(os.getcwd(),'file','background.bmp')
+    if os.path.exists(background_image_location):
+        background_image = Image.open(background_image_location, mode='r')
+        background_image = background_image.resize((folder_receipt.img_size.x, folder_receipt.img_size.y), Image.Resampling.NEAREST)
+
+    # Generate all images from the receipt
     for image_code in range(0, folder_receipt.amount_of_images):
         create_random_image(image_code=image_code,
                             objects=folder_receipt.objects_per_image,
                             image_size=folder_receipt.img_size,
                             path=folder_receipt.path,
                             image_receipt=folder_receipt.image_receipt,
-                            verbose=verbose)
+                            verbose=verbose,
+                            background_image=background_image) 
         
         # update `progress_bar` but there might not be one...
         try: progress_bar.next()
@@ -304,16 +316,16 @@ def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderR
 
 if __name__ == '__main__':
     # Settings
-    use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
+    use_multithreading=False # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
     verbose=False # for debugging only
 
     # Batch settings
-    train_size = 250000
+    train_size = 20#250000
     validation_size = int(train_size/80*20) # 20%
     
     img_sizes = [
-        # loc.Size(500,500),
-        loc.Size(1000,1000),
+        loc.Size(500,500),
+        # loc.Size(1000,1000),
         # loc.Size(2000,2000)
     ]
 

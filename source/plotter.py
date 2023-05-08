@@ -165,7 +165,7 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
 def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:str, image_receipt:ImageReceipt | None, verbose=False) -> None:
     # Setup environment
     window = tkinter.Tk()
-    canvas = tkinter.Canvas(window, bg='white', height=image_size.y, width=image_size.x, takefocus=0)
+    canvas = tkinter.Canvas(window, bg='white', height=image_size.y, width=image_size.x, takefocus=False, state=tkinter.DISABLED)
     list_of_shapes = []
     annotation_info = []
     all_outline_coordinates = []
@@ -308,13 +308,13 @@ if __name__ == '__main__':
     verbose=False # for debugging only
 
     # Batch settings
-    train_size = 50000
+    train_size = 250000
     validation_size = int(train_size/80*20) # 20%
     
     img_sizes = [
         # loc.Size(500,500),
-        # loc.Size(1000,1000),
-        loc.Size(2000,2000)
+        loc.Size(1000,1000),
+        # loc.Size(2000,2000)
     ]
 
     output_path = os.path.join(os.getcwd(), 'files', 'shape_generator')

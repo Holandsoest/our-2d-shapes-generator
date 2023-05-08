@@ -323,6 +323,7 @@ def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderR
 if __name__ == '__main__':
     # Settings
     use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
+    # WARNING You cannot have this true when you are also using a background BUG TODO: fix
     verbose=False # for debugging only
 
     # Batch settings

@@ -247,6 +247,7 @@ def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:s
 def create_from_folder_receipt(folder_receipt:FolderReceipt, verbose=False) -> None:
     # Prepare the background of the image, what is for each the same
     background_image_location = os.path.join(os.getcwd(),'file','background.bmp')
+    background_image = None
     if os.path.exists(background_image_location):
         background_image = Image.open(background_image_location, mode='r')
         background_image = background_image.resize((folder_receipt.img_size.x, folder_receipt.img_size.y), Image.Resampling.NEAREST)
@@ -270,40 +271,46 @@ def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderR
 
     for image_receipt in ImageReceipt:
         if image_receipt != ImageReceipt.MIX:
+            images = int(5*amount/100)
+            if images > 0:
+                receipts.append(FolderReceipt(path,
+                                              amount_of_images= images,
+                                              objects_per_image= 1,
+                                              image_receipt= image_receipt,
+                                              img_size=img_size))
+            count += images
+        images = int(4*amount/100)
+        if images > 0:
             receipts.append(FolderReceipt(path,
-                                        amount_of_images= int(5*amount/100),
-                                        objects_per_image= 1,
+                                        amount_of_images= images,
+                                        objects_per_image= 2,
                                         image_receipt= image_receipt,
                                         img_size=img_size))
-            count += int(5*amount/100)
-
-        receipts.append(FolderReceipt(path,
-                                      amount_of_images= int(4*amount/100),
-                                      objects_per_image= 2,
-                                      image_receipt= image_receipt,
-                                      img_size=img_size))
-        count += int(4*amount/100)
-        
-        receipts.append(FolderReceipt(path,
-                                      amount_of_images= int(3*amount/100),
-                                      objects_per_image= 5,
-                                      image_receipt= image_receipt,
-                                      img_size=img_size))
-        count += int(3*amount/100)
-        
-        receipts.append(FolderReceipt(path,
-                                      amount_of_images= int(2*amount/100),
-                                      objects_per_image= 10,
-                                      image_receipt= image_receipt,
-                                      img_size=img_size))
-        count += int(2*amount/100)
-        
-        receipts.append(FolderReceipt(path,
-                                      amount_of_images= int(amount/100),
-                                      objects_per_image= 20,
-                                      image_receipt= image_receipt,
-                                      img_size=img_size))
-        count += int(amount/100)
+        count += images
+        images = int(3*amount/100)
+        if images > 0:
+            receipts.append(FolderReceipt(path,
+                                        amount_of_images= images,
+                                        objects_per_image= 5,
+                                        image_receipt= image_receipt,
+                                        img_size=img_size))
+        count += images
+        images = int(2*amount/100)
+        if images > 0:
+            receipts.append(FolderReceipt(path,
+                                        amount_of_images= images,
+                                        objects_per_image= 10,
+                                        image_receipt= image_receipt,
+                                        img_size=img_size))
+        count += images
+        images = int(amount/100)
+        if images > 0:
+            receipts.append(FolderReceipt(path,
+                                        amount_of_images= images,
+                                        objects_per_image= 20,
+                                        image_receipt= image_receipt,
+                                        img_size=img_size))
+        count += images
 
     # remaining
     receipts.append(FolderReceipt(path,
@@ -315,7 +322,7 @@ def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderR
 
 if __name__ == '__main__':
     # Settings
-    use_multithreading=False # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
+    use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
     verbose=False # for debugging only
 
     # Batch settings

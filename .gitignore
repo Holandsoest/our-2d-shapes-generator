@@ -47,4 +47,4 @@ dist/**
 package.nls.*.json
 l10n/
 
-files/shape_generator/*
+files/shape_generator/*/*

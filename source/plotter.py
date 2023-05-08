@@ -1,5 +1,5 @@
 """## BUG:
-- The output filesize is not correct. The ques right now is that this is because `.EPS` does some optimization upon first rastirisation before it enters `Pillow`. Very sad. Much cry :'("""
+- The output filesize is not correct. The ques right now is that this is because `.EPS` does some optimization upon first rasterization before it enters `Pillow`. Very sad. Much cry :'("""
 import common.location as loc
 import shapes
 from enum import Enum # Keep enums UPPER_CASE according to https://docs.python.org/3/howto/enum.html  
@@ -246,7 +246,7 @@ def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:s
     window.mainloop()
 def create_from_folder_receipt(folder_receipt:FolderReceipt, verbose=False) -> None:
     # Prepare the background of the image, what is for each the same
-    background_image_location = os.path.join(os.getcwd(),'file','background.bmp')
+    background_image_location = os.path.join(os.getcwd(),'files','shape_generator','background.bmp')
     background_image = None
     if os.path.exists(background_image_location):
         background_image = Image.open(background_image_location, mode='r')
@@ -322,7 +322,7 @@ def get_receipts_of_batch(amount:int, path:str, img_size:loc.Size)->list[FolderR
 
 if __name__ == '__main__':
     # Settings
-    use_multithreading=True # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
+    use_multithreading=False # True: Unleash all hell,   False: Slow but steady not being able to properly use your pc (with accurate time estimations)
     # WARNING You cannot have this true when you are also using a background BUG TODO: fix
     verbose=False # for debugging only
 

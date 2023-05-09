@@ -328,12 +328,12 @@ if __name__ == '__main__':
     verbose=False # for debugging only
 
     # Batch settings
-    train_size = 20#250000
+    train_size = 5000
     validation_size = int(train_size/80*20) # 20%
     
     img_sizes = [
-        loc.Size(500,500),
-        # loc.Size(1000,1000),
+        # loc.Size(500,500),
+        loc.Size(1000,1000),
         # loc.Size(2000,2000)
     ]
 

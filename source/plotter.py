@@ -161,7 +161,8 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
 def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:str, image_receipt:ImageReceipt | None, background_image=None, verbose=False) -> None:
     # Setup environment
     window = tkinter.Tk()
-    canvas = tkinter.Canvas(window, bg='white', height=image_size.y, width=image_size.x, takefocus=False, borderwidth=1)
+    window.geometry(f'{image_size.x}x{image_size.y}')
+    canvas = tkinter.Canvas(window, bg='white', height=image_size.y, width=image_size.x, takefocus=False, borderwidth=0)
     if isinstance(background_image, Image.Image):
         tk_img=ImageTk.PhotoImage(background_image)
         canvas.create_image(2,2, anchor=tkinter.NW, image=tk_img)
@@ -209,7 +210,7 @@ def create_random_image(image_code:int, objects:int, image_size:loc.Size, path:s
                          width_outline=1,
                          location_offset=loc.Pos())
     # Summit the data
-    canvas.pack()
+    canvas.pack(expand=True, fill='both')
     canvas.update()
     if not verbose: window.withdraw()
     save_img(tkinter_canvas=canvas,

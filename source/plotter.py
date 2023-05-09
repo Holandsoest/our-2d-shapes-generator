@@ -122,7 +122,7 @@ def create_random_shape(canvas:tkinter.Canvas, img_size:loc.Size, forbidden_area
     while(not valid_area and patience > 0.0):
 
         # Generate shape properties
-        shape_size = max(25, int(round(  (random.randint(15,50)/100.0) * patience * img_size.min()  ))) # gets 15-50% the size of the image_size, shrinks every loop due to patience. 25 px is smallest size
+        shape_size = max(img_size.min()/20, int(round(  (random.randint(15,50)/100.0) * patience * img_size.min()  ))) # gets 15-50% the size of the image_size, shrinks every loop due to patience. 25 px is smallest size
         shape_center_pos = loc.Pos(x=random.randint(int(shape_size/2), img_size.x - int(shape_size/2)),
                                    y=random.randint(int(shape_size/2), img_size.y - int(shape_size/2)),
                                    force_int=True)
